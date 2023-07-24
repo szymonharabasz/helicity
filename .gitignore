@@ -1,3 +1,5 @@
 *.dat
 *.gif
 *.root
+__pycache__
+**/*.pyc

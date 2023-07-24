@@ -20,5 +20,4 @@ class Bins:
         return result
 
     def suffix(self):
-        print(str(int(self.m_min)), str(int(self.m_max)), self.z_min, self.z_max, self.zToStr(self.z_min), self.zToStr(self.z_max))
         return "_" + str(int(self.m_min)) + "to" + str(int(self.m_max)) + "_" + self.zToStr(self.z_min) + self.zToStr(self.z_max)

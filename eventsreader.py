@@ -98,8 +98,20 @@ class SpdmeEventsReader(EventsReader):
         vecGamma = TLorentzVector(gamma[0], gamma[1], gamma[2], gamma[3])
         vecLepton = TLorentzVector(lepton[0], lepton[1], lepton[2], lepton[3])
         vecNeutron = TLorentzVector(neutron[0], neutron[1], neutron[2], neutron[3])
+       # print("masses: ", vecLepton.M(), vecNeutron.M())
 
-        vecCM = vecGamma + vecNeutron
+        mn = 9.39565612792968750e+02
+        mp = 9.38272338867187528e+02
+        mnucl = (79*mp + 118*mn)/197
+        Ep = mnucl + 1230
+        pp = TMath.Sqrt(Ep*Ep - mnucl*mnucl)
+        beam = TLorentzVector(0.,0.,pp,Ep)
+        target = TLorentzVector(0.,0.,0.,mnucl)
+
+        vecCM = target + beam
+       # vecCM = vecGamma + vecNeutron
+        boost = vecCM.BoostVector()
+       # print("Boost vector: ", boost.X(), boost.Y(), boost.Z())
         vecGamma_cm = TLorentzVector(vecGamma)
         vecLepton_cm = TLorentzVector(vecLepton)
         vecGamma_cm.Boost(-vecCM.BoostVector())
@@ -107,9 +119,14 @@ class SpdmeEventsReader(EventsReader):
         vecLepton_gamma = TLorentzVector(vecLepton_cm)
         vecLepton_gamma.Boost(-vecGamma_cm.BoostVector())
 
+       # print("lepton:       ", vecLepton.X(), vecLepton.Y(), vecLepton.Z(), vecLepton.T())
+       # print("lepton_cm:    ", vecLepton_cm.X(), vecLepton_cm.Y(), vecLepton_cm.Z(), vecLepton_cm.T())
+       # print("lepton_gamma: ", vecLepton_gamma.X(), vecLepton_gamma.Y(), vecLepton_gamma.Z(), vecLepton_gamma.T())
+
+
         event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
         event.phi = self.getPhiHeli(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
         event.z = TMath.Cos(vecGamma_cm.Theta())
-       # print("In this event: ", event.theta, event.phi, event.z)
+       # print(event.theta, event.phi, event.z)
 
 
