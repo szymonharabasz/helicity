@@ -1,4 +1,5 @@
 import math
+import yaml
 
 class Bins:
     def __init__(self, m_min, m_max, z_min, z_max):
@@ -21,3 +22,21 @@ class Bins:
 
     def suffix(self):
         return "_" + str(int(self.m_min)) + "to" + str(int(self.m_max)) + "_" + self.zToStr(self.z_min) + self.zToStr(self.z_max)
+
+    @staticmethod
+    def readFrom(filename):
+        with open(filename,"r") as stream:
+            try:
+                borders = yaml.safe_load(stream)
+                m_borders = borders["m-borders"]
+                z_borders = borders["z-borders"]
+
+                bins = []
+                for i in range(len(m_borders)-1):
+                    for j in range(len(z_borders)-1):
+                        bins.append(Bins(m_borders[i], m_borders[i+1], z_borders[j], z_borders[j+1]))
+
+            except yaml.YAMLError as exc:
+                print(exc)
+
+        return bins

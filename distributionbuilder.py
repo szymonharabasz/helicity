@@ -29,7 +29,8 @@ class DistributionBuilder:
         hists = []
         for bin in bins:
             histname = "hist%s%s" % (bin.suffix(), self.histname_suffix)
-            hists = hists + TH2F(histname,histname,20,-1,1,36,0,2*TMath.Pi())
+            newhist = TH2F(histname,histname,20,-1,1,36,0,2*TMath.Pi())
+            hists.append(newhist)
             print("histname: ", histname)
         hmass = TH1F("hmass" + self.histname_suffix,"hmass" + self.histname_suffix,100,0,1000)
         hz = TH1F("hz" + self.histname_suffix,"hz" + self.histname_suffix,100,-1,1)

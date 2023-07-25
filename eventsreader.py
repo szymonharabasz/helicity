@@ -30,15 +30,21 @@ class Event:
 class EventsReader(ABC):
 
     @abstractmethod
+    def __init__(self):
+        self.events = []
+
+    @abstractmethod
     def readEvents(self, filename):
         pass
 
     def getEvent(self, i):
         return self.events[i]
 
-    events = []
 
 class SpdmeEventsReader(EventsReader):
+
+    def __init__(self):
+        super().__init__()
 
     def readEvents(self, filename):
         file = open(filename, "r")
