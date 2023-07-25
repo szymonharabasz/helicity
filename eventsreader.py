@@ -48,10 +48,9 @@ class SpdmeEventsReader(EventsReader):
 
     def readEvents(self, filename):
         file = open(filename, "r")
-        lines = file.readlines()
 
         i = 0;
-        for line in lines:
+        for line in file:
             numbers  = [float(token) for token in line.split()]
             if i % 4 == 0:
                 if len(self.events) > 0:
