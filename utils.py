@@ -25,13 +25,13 @@ def calcAllChi2(histsMC, histsData):
 
         chi2, ndf = calcOneChi2(histMC, histData)
         print("chi2, ndf, chi2/ndf", chi2, ndf, chi2/ndf)
+        yield chi2, ndf
 
-def makeHists(filename, name_suffix, bins):
-    reader = SpdmeEventsReader()
-    reader.readEvents(filename)
+def makeHists(filename, name_suffix, bins, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
+    reader = SpdmeEventsReader(filename)
     builder = DistributionBuilder(name_suffix)
-    builder.setParameters(0.0, 0.0, 0.0)
-    hists = builder.buildFromEvents(reader.events, bins)
+    builder.setParameters(lambda_theta, lambda_phi, lambda_theta_phi)
+    hists = builder.buildFromEvents(reader.getEvents(), bins)
     return hists
 
 

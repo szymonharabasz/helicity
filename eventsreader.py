@@ -30,24 +30,30 @@ class Event:
 class EventsReader(ABC):
 
     @abstractmethod
-    def __init__(self):
+    def __init__(self, filename):
         self.events = []
+        self.filename = filename
 
     @abstractmethod
-    def readEvents(self, filename):
+    def readEvents(self):
         pass
 
+    def getEvents(self):
+        if not self.events:
+            self.readEvents()
+        return self.events
+
     def getEvent(self, i):
-        return self.events[i]
+        return self.getEvents()[i]
 
 
 class SpdmeEventsReader(EventsReader):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, filenam):
+        super().__init__(filenam)
 
-    def readEvents(self, filename):
-        file = open(filename, "r")
+    def readEvents(self):
+        file = open(self.filename, "r")
 
         i = 0;
         for line in file:
