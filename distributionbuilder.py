@@ -2,6 +2,7 @@ from ctypes.wintypes import HINSTANCE
 from math import sin, cos
 from ROOT import TH1F, TH2F, TMath
 from tqdm.notebook import tqdm
+from datetime import datetime
 
 class DistributionBuilder:
     def __init__(self, histname_suffix):
@@ -32,14 +33,15 @@ class DistributionBuilder:
             histname = "hist%s%s" % (bin.suffix(), self.histname_suffix)
             newhist = TH2F(histname,histname,20,-1,1,36,0,2*TMath.Pi())
             hists.append(newhist)
-            print("histname: ", histname)
         hmass = TH1F("hmass" + self.histname_suffix,"hmass" + self.histname_suffix,100,0,1000)
         hz = TH1F("hz" + self.histname_suffix,"hz" + self.histname_suffix,100,-1,1)
         ievent = 0
         nevents = len(events)
+        print("Before processing events", datetime.now().strftime("%H:%M:%S"))
         for event in tqdm(events):
             if ievent % 100000 == 0:
-                print("Processing event ", ievent, " out of ", nevents)
+                pass
+               # print("Processing event ", ievent, " out of ", nevents)
             ievent = ievent + 1
             binIndex = self.binIndex(event, bins)
 
@@ -54,6 +56,7 @@ class DistributionBuilder:
                 hist.Fill(cos(event.theta), event.phi, weight)
                 hmass.Fill(event.mass)
                 hz.Fill(event.z)
+        print("Before processing events", datetime.now().strftime("%H:%M:%S"))
         for hist in [*hists, hmass, hz]:
             hist.Sumw2()
             hist.Scale(1./hist.Integral())
