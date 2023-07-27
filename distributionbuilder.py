@@ -35,7 +35,12 @@ class DistributionBuilder:
             print("histname: ", histname)
         hmass = TH1F("hmass" + self.histname_suffix,"hmass" + self.histname_suffix,100,0,1000)
         hz = TH1F("hz" + self.histname_suffix,"hz" + self.histname_suffix,100,-1,1)
+        ievent = 0
+        nevents = len(events)
         for event in tqdm(events):
+            if ievent % 100000 == 0:
+                print("Processing event ", ievent, " out of ", nevents)
+            ievent = ievent + 1
             binIndex = self.binIndex(event, bins)
 
             if binIndex >= 0 and binIndex < len(hists):
