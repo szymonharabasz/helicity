@@ -1,6 +1,7 @@
 from ctypes.wintypes import HINSTANCE
 from math import sin, cos
 from ROOT import TH1F, TH2F, TMath
+from tqdm.notebook import tqdm
 
 class DistributionBuilder:
     def __init__(self, histname_suffix):
@@ -34,7 +35,7 @@ class DistributionBuilder:
             print("histname: ", histname)
         hmass = TH1F("hmass" + self.histname_suffix,"hmass" + self.histname_suffix,100,0,1000)
         hz = TH1F("hz" + self.histname_suffix,"hz" + self.histname_suffix,100,-1,1)
-        for event in events:
+        for event in tqdm(events):
             binIndex = self.binIndex(event, bins)
 
             if binIndex >= 0 and binIndex < len(hists):
