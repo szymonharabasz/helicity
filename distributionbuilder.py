@@ -1,12 +1,15 @@
 from ctypes.wintypes import HINSTANCE
 from math import sin, cos
-from ROOT import TH1F, TH2F, TMath
+from ROOT import TH1F, TH2F, TMath, TFile
 from tqdm.notebook import tqdm
 from datetime import datetime
+
+iter = 0
 
 class DistributionBuilder:
     def __init__(self, histname_suffix):
         self.histname_suffix = histname_suffix
+       # self.outfile = TFile("hists.root","RECREATE")
 
     def setParameters(self, lambda_theta, lambda_phi, lambda_theta_phi, lambda_phi_perp = 0, lambda_theta_phi_perp = 0):
         self.lambda_theta = lambda_theta
@@ -28,9 +31,10 @@ class DistributionBuilder:
         return len(bins)
 
     def buildFromEvents(self, events, bins):
+        global iter
         hists = []
         for bin in bins:
-            histname = "hist%s%s" % (bin.suffix(), self.histname_suffix)
+            histname = "hist%s%s_iter%i" % (bin.suffix(), self.histname_suffix, iter)
             newhist = TH2F(histname,histname,20,-1,1,36,0,2*TMath.Pi())
             hists.append(newhist)
         hmass = TH1F("hmass" + self.histname_suffix,"hmass" + self.histname_suffix,100,0,1000)
@@ -56,8 +60,11 @@ class DistributionBuilder:
                 hist.Fill(cos(event.theta), event.phi, weight)
                 hmass.Fill(event.mass)
                 hz.Fill(event.z)
-        print("Before processing events", datetime.now().strftime("%H:%M:%S"))
+        print("After processing events", datetime.now().strftime("%H:%M:%S"))
         for hist in [*hists, hmass, hz]:
             hist.Sumw2()
             hist.Scale(1./hist.Integral())
+           # hist.Write()
+
+        iter = iter + 1
         return (hists, hmass, hz)
