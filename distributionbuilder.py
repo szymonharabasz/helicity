@@ -62,7 +62,6 @@ class DistributionBuilder:
                 hz.Fill(event.z)
         print("After processing events", datetime.now().strftime("%H:%M:%S"))
         for hist in [*hists, hmass, hz]:
-            hist.Sumw2()
             hist.Scale(1./hist.Integral())
            # hist.Write()
 
