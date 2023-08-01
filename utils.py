@@ -13,7 +13,7 @@ def calcOneChi2(histMC, histData):
            # print("contents and error: ", contentMC, contentData, errorData)
             if contentMC > 0 and contentData > 0:
                 ndf = ndf + 1
-                chi2 = chi2 + pow((contentData - contentMC)/errorData, 2)
+                chi2 = chi2 + pow((contentData - contentMC)/contentData, 2)
 
     return chi2, ndf
 
