@@ -32,6 +32,7 @@ class DistributionBuilder:
 
     def buildFromEvents(self, events, bins) -> list[TH2F]:
         global iter
+        print("iter", iter)
         hists: list[TH2F] = []
         for bin in bins:
             histname = "hist%s%s_iter%i" % (bin.suffix(), self.histname_suffix, iter)
