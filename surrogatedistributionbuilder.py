@@ -13,8 +13,6 @@ class SurrogateDistributionBuilder(DistributionBuilder):
 
     def reweightBaseHists(self) -> list[TH2F]:
         global iter
-        if iter % 10 == 0:
-            print("iter", iter)
         hists: list[TH2F] = []
         for bin in self.bins:
             histname = "hist%s%s_iter%i" % (bin.suffix(), self.histname_suffix, iter)
