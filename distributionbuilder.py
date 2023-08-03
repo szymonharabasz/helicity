@@ -7,8 +7,11 @@ from datetime import datetime
 iter = 0
 
 class DistributionBuilder:
-    def __init__(self, histname_suffix):
+    def __init__(self, histname_suffix, events, bins):
         self.histname_suffix = histname_suffix
+        self.events = events
+        self.bins = bins
+        self.setParameters(0.0, 0.0, 0.0)
        # self.outfile = TFile("hists.root","RECREATE")
 
     def setParameters(self, lambda_theta, lambda_phi, lambda_theta_phi, lambda_phi_perp = 0, lambda_theta_phi_perp = 0):
@@ -30,11 +33,11 @@ class DistributionBuilder:
             index = index + 1
         return len(bins)
 
-    def buildFromEvents(self, events, bins) -> list[TH2F]:
+    def buildFromEvents(self) -> list[TH2F]:
         global iter
         print("iter", iter)
         hists: list[TH2F] = []
-        for bin in bins:
+        for bin in self.bins:
             histname = "hist%s%s_iter%i" % (bin.suffix(), self.histname_suffix, iter)
             newhist = TH2F(histname,histname,20,-1,1,36,0,2*TMath.Pi())
             hists.append(newhist)
@@ -44,30 +47,25 @@ class DistributionBuilder:
         hmass = TH1F("hmass" + self.histname_suffix,"hmass" + self.histname_suffix,100,0,1000)
         hz = TH1F("hz" + self.histname_suffix,"hz" + self.histname_suffix,100,-1,1)
         ievent = 0
-        nevents = len(events)
+        nevents = len(self.events)
         print("Before processing events", datetime.now().strftime("%H:%M:%S"))
-        for event in tqdm(events):
-            if ievent % 100000 == 0:
-                pass
-               # print("Processing event ", ievent, " out of ", nevents)
+        for event in self.events:
             ievent = ievent + 1
-            binIndex = self.binIndex(event, bins)
+            binIndex = self.binIndex(event, self.bins)
 
             if binIndex >= 0 and binIndex < len(hists):
                 hist = hists[binIndex]
 
                 weight = self.calcWeight(event.theta, event.phi)
-               # weight = event.weight * self.calcWeight(event.theta, event.phi)
-               # print(weight, event.weight, self.calcWeight(event.theta, event.phi))
-               # hist.Fill(cos(event.theta), event.phi, weight)
-               # print("weight, cos: ", weight, cos(event.theta), TMath.Cos(event.theta))
                 hist.Fill(cos(event.theta), event.phi, weight)
                 hmass.Fill(event.mass)
                 hz.Fill(event.z)
         print("After processing events", datetime.now().strftime("%H:%M:%S"))
         for hist in [*hists, hmass, hz]:
             hist.Scale(1./hist.Integral())
-           # hist.Write()
 
         iter = iter + 1
         return [hists, [hmass], [hz]]
+
+    def getHists(self) -> list[TH2F]:
+        return self.buildFromEvents()

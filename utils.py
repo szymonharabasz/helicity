@@ -1,5 +1,6 @@
 from eventsreader import SpdmeEventsReader
 from distributionbuilder import DistributionBuilder
+from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from ROOT import TCanvas, TFile
 
 def calcOneChi2(histMC, histData):
@@ -27,12 +28,14 @@ def calcAllChi2(histsMC, histsData):
         print("chi2, ndf, chi2/ndf", chi2, ndf, chi2/ndf)
         yield chi2, ndf
 
-def makeHists(filename, name_suffix, bins, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
-    reader = SpdmeEventsReader(filename)
-    builder = DistributionBuilder(name_suffix)
-    builder.setParameters(lambda_theta, lambda_phi, lambda_theta_phi)
-    hists = builder.buildFromEvents(reader.getEvents(), bins)
-    return hists
+class HistMaker:
+    def __init__(self, filename, name_suffix, bins):
+        self.reader = SpdmeEventsReader(filename)
+        # self.builder = DistributionBuilder(name_suffix, reader.getEvents(), bins)
+        self.builder = SurrogateDistributionBuilder(name_suffix, self.reader.getEvents(), bins)
+    def makeHists(self, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
+        self.builder.setParameters(lambda_theta, lambda_phi, lambda_theta_phi)
+        return self.builder.getHists()
 
 
 def makeRootPlots(histsMC, histsData):
