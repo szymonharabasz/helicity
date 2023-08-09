@@ -4,21 +4,34 @@ from distributionbuilder import DistributionBuilder
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from ROOT import TCanvas, TFile
 
+def calcDiff(histMC, histData, bx, by):
+    contentMC = histMC.GetBinContent(bx+1,by+1)
+    contentData = histData.GetBinContent(bx+1,by+1)
+    errorData = histData.GetBinError(bx+1,by+1)
+    if contentMC > 0 and contentData > 0:
+        return pow((contentData - contentMC)/errorData, 2)
+    else:
+        return 0.0
+
 def calcOneChi2(histMC, histData):
     chi2 = 0.
     ndf = 0
     for bx in range(histMC.GetXaxis().GetNbins()):
         for by in range(histMC.GetYaxis().GetNbins()):
-            contentMC = histMC.GetBinContent(bx+1,by+1)
-            contentData = histData.GetBinContent(bx+1,by+1)
-            errorData = histData.GetBinError(bx+1,by+1)
-           # print("contents and error: ", contentMC, contentData, errorData)
-            if contentMC > 0 and contentData > 0:
+            diff = calcDiff(histMC, histData, bx, by)
+            if diff > 0:
                 ndf = ndf + 1
-                chi2 = chi2 + pow((contentData - contentMC)/errorData, 2)
-
+                chi2 = chi2 + diff
     return chi2, ndf
 
+def diffHist(histMC, histData):
+    name = histMC.GetName() + "_diff"
+    hdiff = histMC.Clone(name)
+    for bx in range(histMC.GetXaxis().GetNbins()):
+        for by in range(histMC.GetYaxis().GetNbins()):
+            diff = calcDiff(histMC, histData, bx, by)
+            hdiff.SetBinContent(bx, by, diff)
+    return hdiff
 
 def calcAllChi2(histsMC, histsData):
     for i in range(len(histsMC[0])):
