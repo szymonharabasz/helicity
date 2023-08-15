@@ -27,15 +27,20 @@ class SurrogateDistributionBuilder(DistributionBuilder):
 
             hist = hists[ihist]
             baseHist = self.base_hists[0][ihist]
-            for bx in range(hist.GetNbinsX()):
-                for by in range(hist.GetNbinsY()):
+            for ix in range(hist.GetNbinsX()):
+                for iy in range(hist.GetNbinsY()):
+                    bx = ix+1
+                    by = iy+1
                     content = baseHist.GetBinContent(bx, by)
-                    phi = hist.GetXaxis().GetBinCenter(by)
+                    phi = hist.GetYaxis().GetBinCenter(by)
                     cosTheta = hist.GetXaxis().GetBinCenter(bx)
                     theta = TMath.ACos(cosTheta)
 
                     weight = self.calcWeight(theta, phi)
                     hist.SetBinContent(bx, by, content*weight)
+                   # if bx == 11:
+                   #     print(bx, by, cosTheta, theta, phi, weight)
+                    
             
             hist.Scale(1./hist.Integral())
         if iter % 10 == 0:

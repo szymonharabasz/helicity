@@ -45,7 +45,7 @@ def calcAllChi2(histsMC, histsData):
 class HistMaker:
     def __init__(self, filename, name_suffix, bins):
         self.reader = SpdmeEventsReader(filename)
-        # self.builder = DistributionBuilder(name_suffix, reader.getEvents(), bins)
+        #self.builder = DistributionBuilder(name_suffix, self.reader.getEvents(), bins)
         self.builder = SurrogateDistributionBuilder(name_suffix, self.reader.getEvents(), bins)
     def makeHists(self, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
         self.builder.setParameters(lambda_theta, lambda_phi, lambda_theta_phi)
