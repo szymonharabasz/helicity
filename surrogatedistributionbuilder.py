@@ -42,7 +42,8 @@ class SurrogateDistributionBuilder(DistributionBuilder):
                    #     print(bx, by, cosTheta, theta, phi, weight)
                     
             
-            hist.Scale(1./hist.Integral())
+            if hist.Integral() > 0:
+                hist.Scale(1./hist.Integral())
         if iter % 10 == 0:
             print("After reweighting hists", datetime.now().strftime("%H:%M:%S"))
         
