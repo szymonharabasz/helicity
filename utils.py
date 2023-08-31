@@ -30,7 +30,7 @@ def diffHist(histMC, histData):
     for bx in range(histMC.GetXaxis().GetNbins()):
         for by in range(histMC.GetYaxis().GetNbins()):
             diff = calcDiff(histMC, histData, bx, by)
-            hdiff.SetBinContent(bx, by, diff)
+            hdiff.SetBinContent(bx+1, by+1, diff)
     return hdiff
 
 def calcAllChi2(histsMC, histsData):
