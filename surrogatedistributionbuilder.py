@@ -21,8 +21,6 @@ class SurrogateDistributionBuilder(DistributionBuilder):
         if not isinstance(newhist, TH2F):
             print("Error, newHist is: ", newhist)
             
-        if iter % 10 == 0:
-            print("Before reweighting hists", datetime.now().strftime("%H:%M:%S"))
         for ihist in range(len(hists)):
 
             hist = hists[ihist]
@@ -32,20 +30,18 @@ class SurrogateDistributionBuilder(DistributionBuilder):
                     bx = ix+1
                     by = iy+1
                     content = baseHist.GetBinContent(bx, by)
+                    error = baseHist.GetBinError(bx, by)
                     phi = hist.GetYaxis().GetBinCenter(by)
                     cosTheta = hist.GetXaxis().GetBinCenter(bx)
                     theta = TMath.ACos(cosTheta)
 
                     weight = self.calcWeight(theta, phi)
                     hist.SetBinContent(bx, by, content*weight)
-                   # if bx == 11:
-                   #     print(bx, by, cosTheta, theta, phi, weight)
+                    hist.SetBinError(bx, by, error*weight)
                     
             
             if hist.Integral() > 0:
                 hist.Scale(1./hist.Integral())
-        if iter % 10 == 0:
-            print("After reweighting hists", datetime.now().strftime("%H:%M:%S"))
         
         hmass = self.base_hists[1][0]
         hz = self.base_hists[2][0]

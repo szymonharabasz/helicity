@@ -9,6 +9,7 @@ def calcDiff(histMC, histData, bx, by):
     contentData = histData.GetBinContent(bx+1,by+1)
     errorData = histData.GetBinError(bx+1,by+1)
     if contentMC > 0 and contentData > 0:
+       # return pow((contentData - contentMC)/errorData, 2)
         return pow((contentData - contentMC)/errorData, 2)
     else:
         return 0.0
