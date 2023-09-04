@@ -200,12 +200,12 @@ for trial in range(num_repeats):
 
     for i in tqdm(range(num_queries)):
         feasible_incumbents[trial, i] = train_utility.max()
-        print("train_x, train_utikity", train_x, train_utility)
+       # print("train_x, train_utikity", train_x, train_utility)
 
         utility_model, utility_likelihood = fit_gp_model(
             train_x, train_utility.squeeze(-1)
         )
-        print("utility model, utility likelihood = ", utility_model, utility_likelihood)
+       # print("utility model, utility likelihood = ", utility_model, utility_likelihood)
         best_f = train_utility.max()
         best_fs.append(best_f.item())
                 
@@ -228,7 +228,7 @@ for trial in range(num_repeats):
                 inequality_constraints=[(torch.tensor([0,2],device=mps_device),torch.tensor([-2.0,-1.0],dtype=torch.float,device=mps_device),-2.0)],
             )
 
-        next_utility = objective(next_x)
+        next_utility = objective(next_x).to(mps_device)
 
         train_x = torch.cat([train_x, next_x])
         train_utility = torch.cat([train_utility, next_utility])
