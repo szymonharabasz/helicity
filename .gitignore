@@ -2,6 +2,7 @@
 *.pth
 *.dat
 *.gif
+*.png
 *.root
 __pycache__
 **/*.pyc
