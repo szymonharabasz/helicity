@@ -1,3 +1,4 @@
+results_*
 .ipynb_checkpoints
 *.pth
 *.dat
