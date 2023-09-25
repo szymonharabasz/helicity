@@ -58,11 +58,17 @@ class SpdmeEventsReader(EventsReader):
         i = 0;
         for line in file:
             numbers  = [float(token) for token in line.split()]
+            if len(numbers) <= 0:
+                continue
             if i % 4 == 0:
                 if len(self.events) > 0:
                     self.setEventProperties(self.events[-1])
 
-                event_weight = numbers[1]
+                try:
+                    event_weight = numbers[1]
+                except IndexError as e:
+                    print("There was an error ", e)
+                    print("Line read from file: ", line)
                # print(numbers)
                 self.events.append(Event(event_weight))
                # print(self.events[-1].weight)
