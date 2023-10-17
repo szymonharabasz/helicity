@@ -2,6 +2,8 @@ import math
 from eventsreader import SpdmeEventsReader
 from distributionbuilder import DistributionBuilder
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
+from distributionbuilder_1d import DistributionBuilder_1d
+from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
 from ROOT import TCanvas, TFile
 
 def calcDiff(histMC, histData, bx, by):
@@ -50,6 +52,15 @@ class HistMaker:
         self.builder = SurrogateDistributionBuilder(name_suffix, self.reader.getEvents(), bins)
     def makeHists(self, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
         self.builder.setParameters(lambda_theta, lambda_phi, lambda_theta_phi)
+        return self.builder.getHists()
+
+class HistMaker_1d:
+    def __init__(self, filename, name_suffix, bins):
+        self.reader = SpdmeEventsReader(filename)
+        #self.builder = DistributionBuilder_1d(name_suffix, self.reader.getEvents(), bins)
+        self.builder = SurrogateDistributionBuilder_1d(name_suffix, self.reader.getEvents(), bins)
+    def makeHists(self, lambda_theta=0):
+        self.builder.setParameters(lambda_theta)
         return self.builder.getHists()
 
 
