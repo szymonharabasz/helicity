@@ -27,7 +27,7 @@ class DistributionBuilder_1d:
             index = index + 1
         return len(bins)
 
-    def buildFromEvents(self) -> list[TH1F]:
+    def buildFromEvents(self):
         global iter
         print("iter", iter)
         hists: list[TH1F] = []
@@ -38,11 +38,13 @@ class DistributionBuilder_1d:
         if not isinstance(newhist, TH1F):
             print("Error, newHist is: ", newhist)
             
-        hmass = TH1F("hmass" + self.histname_suffix,"hmass" + self.histname_suffix,100,0,1000)
-        hz = TH1F("hz" + self.histname_suffix,"hz" + self.histname_suffix,100,-1,1)
+        hmassLowM = TH1F("hmassLowM" + self.histname_suffix,"hmassLowM" + self.histname_suffix,100,0,1000)
+        hzLowM = TH1F("hzLowM" + self.histname_suffix,"hzLowM" + self.histname_suffix,100,-1,1)
+        hmassHigM = TH1F("hmassHigM" + self.histname_suffix, "hmassHigM" + self.histname_suffix, 100, 0, 1000)
+        hzHigM = TH1F("hzHigM" + self.histname_suffix, "hzHigM" + self.histname_suffix, 100, -1, 1)
         ievent = 0
         nevents = len(self.events)
-        print("Before processing events", datetime.now().strftime("%H:%M:%S"))
+       # print("Before processing events", datetime.now().strftime("%H:%M:%S"))
         for event in self.events:
             ievent = ievent + 1
             binIndex = self.binIndex(event, self.bins)
@@ -52,15 +54,23 @@ class DistributionBuilder_1d:
 
                 weight = self.calcWeight(event.theta)
                 hist.Fill(cos(event.theta), weight)
-                hmass.Fill(event.mass)
-                hz.Fill(event.z)
-        print("After processing events", datetime.now().strftime("%H:%M:%S"))
-        for hist in [*hists, hmass, hz]:
+                if binIndex < 3 and event.mass < self.bins[2].m_max:
+                    hmassLowM.Fill(event.mass)
+                    hzLowM.Fill(event.z)
+                if binIndex >= 3 and event.mass >= self.bins[2].m_max:
+                    hmassHigM.Fill(event.mass)
+                    hzHigM.Fill(event.z)
+
+       # print("After processing events", datetime.now().strftime("%H:%M:%S"))
+        for hist in [*hists, hmassLowM, hzLowM]:
             if hist.Integral() > 0:
                 hist.Scale(1./hist.Integral())
 
         iter = iter + 1
-        return [hists, [hmass], [hz]]
+        result = [hists, [hmassLowM, hmassHigM], [hzLowM, hzHigM]]
+        print ("#1", result)
+        return result
 
     def getHists(self) -> list[TH1F]:
-        return self.buildFromEvents()
+        result = self.buildFromEvents()
+        return result
