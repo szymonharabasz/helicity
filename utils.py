@@ -4,7 +4,7 @@ from distributionbuilder import DistributionBuilder
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from distributionbuilder_1d import DistributionBuilder_1d
 from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
-from ROOT import TCanvas, TFile
+from ROOT import TCanvas, TFile, TPaveText
 
 def calcDiff(histMC, histData, bx, by):
     contentMC = histMC.GetBinContent(bx+1,by+1)
@@ -86,3 +86,17 @@ def makeRootPlots(histsMC, histsData):
     histsData[2].Write()
     c.SaveAs("c.gif")
     print("Total hist entries: ", totentries)
+
+def setOPT_text(cut_desc, x1, y1, x2, y2, color, textSize):
+
+    description = TPaveText(x1, y1, x2, y2, "NDC")
+    description.SetLineWidth(0)
+    description.AddText(cut_desc)
+    description.SetTextSize(textSize)
+    description.SetBorderSize(0)
+    description.SetTextFont(62)
+    description.SetTextColor(color)
+    description.SetFillColor(0)
+    description.SetFillStyle(0)
+    description.Draw()
+    return description
