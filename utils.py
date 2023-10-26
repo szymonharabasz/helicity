@@ -4,7 +4,7 @@ from distributionbuilder import DistributionBuilder
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from distributionbuilder_1d import DistributionBuilder_1d
 from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
-from ROOT import TCanvas, TFile, TPaveText
+from ROOT import TCanvas, TFile, TPaveText, gStyle
 
 def calcDiff(histMC, histData, bx, by):
     contentMC = histMC.GetBinContent(bx+1,by+1)
@@ -100,3 +100,41 @@ def setOPT_text(cut_desc, x1, y1, x2, y2, color, textSize):
     description.SetFillStyle(0)
     description.Draw()
     return description
+
+def setTH1(hist, xAxisTitle, yAxisTitle, Ndevision, marker_style, marker_size, color):
+
+    hist.GetXaxis().SetTitle(xAxisTitle)
+    hist.GetYaxis().SetTitle(yAxisTitle)
+    hist.GetXaxis().SetTitleSize(0.06)
+    hist.GetYaxis().SetTitleSize(0.06)
+    hist.GetXaxis().SetTitleFont(42)
+    hist.GetYaxis().SetTitleFont(42)
+    hist.GetXaxis().SetNdivisions(Ndevision)
+    hist.GetYaxis().SetTitleOffset(1.5)
+    hist.GetXaxis().SetTitleOffset(0.9)
+
+    hist.GetXaxis().SetLabelFont(42)
+    hist.GetYaxis().SetLabelFont(42)
+    hist.GetXaxis().SetLabelSize(0.05)
+    hist.GetYaxis().SetLabelSize(0.05)
+    hist.SetMarkerStyle(marker_style)
+    hist.SetMarkerSize(marker_size)
+    hist.SetMarkerColor(color)
+    hist.SetLineColor(color)
+    hist.SetLineWidth(2)
+
+def setPad(canvas):
+    gStyle.SetLineStyleString(22,"80 18 12 18 12 12")
+    canvas.SetFillColor(0)
+    canvas.SetBorderMode(0)
+    canvas.SetBorderSize(0)
+    canvas.SetTickx()
+    canvas.SetTicky()
+    canvas.SetFrameLineWidth(2)
+    canvas.SetFrameBorderMode(0)
+    canvas.SetFrameBorderSize(0)
+    canvas.SetLeftMargin(0.17)
+    canvas.SetRightMargin(0.07)
+    canvas.SetTopMargin(0.074)
+    canvas.SetBottomMargin(0.165)
+    canvas.Range(-194.483,-10.3682,1041.38,-2.08469)
