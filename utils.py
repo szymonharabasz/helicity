@@ -4,12 +4,12 @@ from distributionbuilder import DistributionBuilder
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from distributionbuilder_1d import DistributionBuilder_1d
 from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
-from ROOT import TCanvas, TFile, TPaveText, gStyle
+from ROOT import TCanvas, TFile, TPaveText, gStyle, TMath, TString, TH1F
 
 def calcDiff(histMC, histData, bx, by):
-    contentMC = histMC.GetBinContent(bx+1,by+1)
-    contentData = histData.GetBinContent(bx+1,by+1)
-    errorData = histData.GetBinError(bx+1,by+1)
+    contentMC = histMC.GetBinContent(bx+1,by+1) / histMC.Integral()
+    contentData = histData.GetBinContent(bx+1,by+1) / histData.Integral()
+    errorData = histData.GetBinError(bx+1,by+1) / histData.Integral()
     if contentMC > 0 and contentData > 0:
        # return pow((contentData - contentMC)/errorData, 2)
         return pow((contentData - contentMC)/errorData, 2)
@@ -138,3 +138,67 @@ def setPad(canvas):
     canvas.SetTopMargin(0.074)
     canvas.SetBottomMargin(0.165)
     canvas.Range(-194.483,-10.3682,1041.38,-2.08469)
+
+def geomAvg(h1, h2, minratio):
+    name = TString(h1.GetName())
+    name.ReplaceAll("NN", "Avg")
+    name.ReplaceAll("PP", "Avg")
+    nbins = h1.GetNbinsX()
+    lowEdge = h1.GetXaxis().GetBinLowEdge(1)
+    upEdge = h1.GetXaxis().GetBinUpEdge(nbins)
+    result = TH1F(name.Data(), name.Data(), h1.GetNbinsX(), lowEdge, upEdge)
+    for bin_x in range(1, h1.GetNbinsX()):
+        for bin_y in range(1, h1.GetNbinsY()):
+            for bin_z in range(1, h1.GetNbinsZ()):
+                ratio1 = h1.GetBinContent(bin_x, bin_y, bin_z) /h2.GetBinContent(bin_x, bin_y, bin_z)
+                ratio2 = h2.GetBinContent(bin_x, bin_y, bin_z) /h1.GetBinContent(bin_x, bin_y, bin_z)
+                content = 2 * TMath.Sqrt(h1.GetBinContent(bin_x, bin_y, bin_z) * h2.GetBinContent(bin_x, bin_y, bin_z))
+                x = h1.GetBinContent(bin_x, bin_y, bin_z)
+                y = h2.GetBinContent(bin_x, bin_y, bin_z)
+                sx = h1.GetBinError(bin_x, bin_y, bin_z)
+                sy = h2.GetBinError(bin_x, bin_y, bin_z)
+                dfdx2 = y / x
+                dfdy2 = x / y
+                error = TMath.Sqrt(dfdx2 * sx * sx + dfdy2 * sy * sy)
+                if ratio1 <= minratio or ratio2 <= minratio or not TMath.Finite(ratio1) or not TMath.Finite(ratio2):
+                    content = h1.GetBinContent(bin_x, bin_y, bin_z) + h2.GetBinContent(bin_x, bin_y, bin_z);
+                    error = h1.GetBinError(bin_x, bin_y, bin_z) + h2.GetBinError(bin_x, bin_y, bin_z);
+
+                result.SetBinContent(bin_x, bin_y, bin_z, content);
+                result.SetBinError(bin_x, bin_y, bin_z, error);
+    return result
+
+def geomAvg1d(h1, h2, minratio):
+    name = TString(h1.GetName())
+    name.ReplaceAll("NN", "Avg")
+    name.ReplaceAll("PP", "Avg")
+    nbins = h1.GetNbinsX()
+    lowEdge = h1.GetXaxis().GetBinLowEdge(1)
+    upEdge = h1.GetXaxis().GetBinUpEdge(nbins)
+    result = TH1F(name.Data(), name.Data(), h1.GetNbinsX(), lowEdge, upEdge)
+    for bin_x in range(1, 1 + h1.GetNbinsX()):
+        try:
+            ratio1 = h1.GetBinContent(bin_x) /h2.GetBinContent(bin_x)
+        except ZeroDivisionError:
+            ratio1 = 0
+        try:
+            ratio2 = h2.GetBinContent(bin_x) /h1.GetBinContent(bin_x)
+        except ZeroDivisionError:
+            ratio2 = 0
+
+        if ratio1 <= minratio or ratio2 <= minratio or not TMath.Finite(ratio1) or not TMath.Finite(ratio2):
+            content = h1.GetBinContent(bin_x) + h2.GetBinContent(bin_x)
+            error = h1.GetBinError(bin_x) + h2.GetBinError(bin_x)
+        else:
+            content = 2 * TMath.Sqrt(h1.GetBinContent(bin_x) * h2.GetBinContent(bin_x))
+            x = h1.GetBinContent(bin_x)
+            y = h2.GetBinContent(bin_x)
+            sx = h1.GetBinError(bin_x)
+            sy = h2.GetBinError(bin_x)
+            dfdx2 = y / x
+            dfdy2 = x / y
+            error = TMath.Sqrt(dfdx2 * sx * sx + dfdy2 * sy * sy)
+
+        result.SetBinContent(bin_x, content);
+        result.SetBinError(bin_x, error);
+    return result

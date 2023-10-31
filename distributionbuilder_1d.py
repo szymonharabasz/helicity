@@ -64,7 +64,8 @@ class DistributionBuilder_1d:
        # print("After processing events", datetime.now().strftime("%H:%M:%S"))
         for hist in [*hists, hmassLowM, hzLowM]:
             if hist.Integral() > 0:
-                hist.Scale(1./hist.Integral())
+                pass
+               # hist.Scale(1./hist.Integral())
 
         iter = iter + 1
         result = [hists, [hmassLowM, hmassHigM], [hzLowM, hzHigM]]

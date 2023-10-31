@@ -38,7 +38,8 @@ class SurrogateDistributionBuilder_1d(DistributionBuilder_1d):
                     
             
             if hist.Integral() > 0:
-                hist.Scale(1./hist.Integral())
+                pass
+               # hist.Scale(1./hist.Integral())
         
        # hmassLowM = self.base_hists[1][0]
        # hzLowM = self.base_hists[2][0]
@@ -52,3 +53,4 @@ class SurrogateDistributionBuilder_1d(DistributionBuilder_1d):
         result = self.reweightBaseHists()
         print ("#2", result)
         return result
+
