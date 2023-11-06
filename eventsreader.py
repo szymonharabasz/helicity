@@ -57,6 +57,8 @@ class SpdmeEventsReader(EventsReader):
 
         i = 0;
         for line in file:
+            if line.startswith("==>"):
+                continue
             numbers  = [float(token) for token in line.split()]
             if len(numbers) <= 0:
                 continue
