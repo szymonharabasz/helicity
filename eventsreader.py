@@ -35,9 +35,10 @@ class Event:
 class EventsReader(ABC):
 
     @abstractmethod
-    def __init__(self, filename):
+    def __init__(self, filename, frame):
         self.events = []
         self.filename = filename
+        self.frame = frame
 
     @abstractmethod
     def readEvents(self):
@@ -156,8 +157,16 @@ class SpdmeEventsReader(EventsReader):
        # print("lepton_gamma: ", vecLepton_gamma.X(), vecLepton_gamma.Y(), vecLepton_gamma.Z(), vecLepton_gamma.T())
 
 
-        event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
-        event.phi _, _, = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
+        if self.frame == Frame.HX:
+            event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
+            event.phi, _, _ = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
+        elif self.frame == Frame.CS:
+            event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
+            _, event.phi, _ = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
+        else:
+            event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
+            _, _, event.phi = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
+
         event.z = TMath.Cos(vecGamma_cm.Theta())
        # print(event.theta, event.phi, event.z)
 
