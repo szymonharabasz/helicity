@@ -35,10 +35,16 @@ class Event:
 class EventsReader(ABC):
 
     @abstractmethod
-    def __init__(self, filename, frame):
+    def __init__(self, filename, frame, ekin):
         self.events = []
         self.filename = filename
         self.frame = frame
+
+        self.mn = 9.39565612792968750e+02
+        self.mp = 9.38272338867187528e+02
+        self.mnucl = (79*self.mp + 118*self.mn)/197
+        self.Ep = self.mnucl + 1230
+        self.pp = TMath.Sqrt(self.Ep*self.Ep - self.mnucl*self.mnucl)
 
     @abstractmethod
     def readEvents(self):
@@ -84,12 +90,9 @@ class SpdmeEventsReader(EventsReader):
                 self.events[-1].four_momenta.append(tuple(numbers))
             i = i + 1
 
-    def getPhis(self, dilep, dilep_cm, ev4_dilep, ekin):
-        mp = 9.38272338867187528e+02
-        Ep = mp + ekin
-        pp = TMath.Sqrt(Ep * Ep - mp * mp)
-        beam = TLorentzVector(0., 0., pp, Ep)
-        target = TLorentzVector(0., 0., 0., mp)
+    def getPhis(self, dilep, dilep_cm, ev4_dilep):
+        beam = TLorentzVector(0., 0., self.pp, self.Ep)
+        target = TLorentzVector(0., 0., 0., self.mp)
         beam.Boost(-dilep.BoostVector())
         target.Boost(-dilep.BoostVector())
         beam_dir = beam.Vect()
@@ -133,13 +136,8 @@ class SpdmeEventsReader(EventsReader):
         vecNeutron = TLorentzVector(neutron[0], neutron[1], neutron[2], neutron[3])
        # print("masses: ", vecLepton.M(), vecNeutron.M())
 
-        mn = 9.39565612792968750e+02
-        mp = 9.38272338867187528e+02
-        mnucl = (79*mp + 118*mn)/197
-        Ep = mnucl + 1230
-        pp = TMath.Sqrt(Ep*Ep - mnucl*mnucl)
-        beam = TLorentzVector(0.,0.,pp,Ep)
-        target = TLorentzVector(0.,0.,0.,mnucl)
+        beam = TLorentzVector(0.,0.,self.pp,self.Ep)
+        target = TLorentzVector(0.,0.,0.,self.mnucl)
 
         vecCM = target + beam
        # vecCM = vecGamma + vecNeutron
@@ -156,15 +154,25 @@ class SpdmeEventsReader(EventsReader):
        # print("lepton_cm:    ", vecLepton_cm.X(), vecLepton_cm.Y(), vecLepton_cm.Z(), vecLepton_cm.T())
        # print("lepton_gamma: ", vecLepton_gamma.X(), vecLepton_gamma.Y(), vecLepton_gamma.Z(), vecLepton_gamma.T())
 
+        beam = TLorentzVector(0., 0., self.pp, self.Ep)
+        target = TLorentzVector(0., 0., 0., self.mp)
+        beam.Boost(-vecGamma.BoostVector())
+        target.Boost(-vecGamma.BoostVector())
+        beam_dir = beam.Vect()
+        target_dir = target.Vect()
+        beam_dir.SetMag(1.)
+        target_dir.SetMag(1.)
+
+        z_cs = beam_dir - target_dir
 
         if self.frame == Frame.HX:
             event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
             event.phi, _, _ = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
         elif self.frame == Frame.CS:
-            event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
+            event.theta = vecLepton_gamma.Angle(z_cs)
             _, event.phi, _ = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
         else:
-            event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
+            event.theta = vecLepton_gamma.Angle(beam_dir)
             _, _, event.phi = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
 
         event.z = TMath.Cos(vecGamma_cm.Theta())
