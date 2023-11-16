@@ -1,7 +1,12 @@
 import math
 from ROOT import TLorentzVector, TMath
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from enum import Enum
+
+class Frame(Enum):
+    HX = 1
+    CS = 2
+    GJ = 3
 
 class Event:
     def __init__(self, weight):
@@ -78,14 +83,12 @@ class SpdmeEventsReader(EventsReader):
                 self.events[-1].four_momenta.append(tuple(numbers))
             i = i + 1
 
-
-    def getPhiHeli(self, dilep, dilep_cm, ev4_dilep, ekin):                                                                                                                                    
-
+    def getPhis(self, dilep, dilep_cm, ev4_dilep, ekin):
         mp = 9.38272338867187528e+02
         Ep = mp + ekin
-        pp = TMath.Sqrt(Ep*Ep - mp*mp)
-        beam = TLorentzVector(0.,0.,pp,Ep)
-        target = TLorentzVector(0.,0.,0.,mp)
+        pp = TMath.Sqrt(Ep * Ep - mp * mp)
+        beam = TLorentzVector(0., 0., pp, Ep)
+        target = TLorentzVector(0., 0., 0., mp)
         beam.Boost(-dilep.BoostVector())
         target.Boost(-dilep.BoostVector())
         beam_dir = beam.Vect()
@@ -93,15 +96,25 @@ class SpdmeEventsReader(EventsReader):
         beam_dir.SetMag(1.)
         target_dir.SetMag(1.)
 
+        zCS = beam_dir - target_dir
         yCS = beam_dir.Cross(target_dir)
+        xCS = yCS.Cross(zCS)
+        xGJ = yCS.Cross(beam_dir)
         xHeli = yCS.Cross(dilep_cm.Vect())
+        zCS.SetMag(1.)
         yCS.SetMag(1.)
+        xCS.SetMag(1.)
+        xGJ.SetMag(1.)
         xHeli.SetMag(1.)
-        ev4_dilep_y = 1000*ev4_dilep.Vect().Dot(yCS);
-        ev4_dilep_x_hl = 1000*ev4_dilep.Vect().Dot(xHeli);
+        ev4_dilep_y = 1000 * ev4_dilep.Vect().Dot(yCS);
+        ev4_dilep_x_hl = 1000 * ev4_dilep.Vect().Dot(xHeli);
+        ev4_dilep_x_cs = 1000 * ev4_dilep.Vect().Dot(xCS);
+        ev4_dilep_x_gj = 1000 * ev4_dilep.Vect().Dot(xGJ);
         phiHeli = TMath.ATan2(ev4_dilep_y, ev4_dilep_x_hl) + TMath.Pi()
-        return phiHeli
+        phiCS = TMath.ATan2(ev4_dilep_y, ev4_dilep_x_cs) + TMath.Pi()
+        phiGJ = TMath.ATan2(ev4_dilep_y, ev4_dilep_x_gj) + TMath.Pi()
 
+        return phiHeli, phiCS, phiGJ
 
     def setEventProperties(self, event):
         event.mass = math.sqrt(
@@ -144,7 +157,7 @@ class SpdmeEventsReader(EventsReader):
 
 
         event.theta = vecLepton_gamma.Angle(vecGamma_cm.Vect())
-        event.phi = self.getPhiHeli(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
+        event.phi _, _, = self.getPhis(vecGamma, vecGamma_cm, vecLepton_gamma, 1230)
         event.z = TMath.Cos(vecGamma_cm.Theta())
        # print(event.theta, event.phi, event.z)
 

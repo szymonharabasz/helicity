@@ -202,3 +202,28 @@ def geomAvg1d(h1, h2, minratio):
         result.SetBinContent(bin_x, content);
         result.SetBinError(bin_x, error);
     return result
+
+def ratioErr(valA, valB, errA, errB):
+    err2 = math.pow(errA/valB, 2) + math.pow(valA * errB / (valB * valB), 2)
+    err = math.sqrt(err2)
+    return err
+
+def symmetrize(hist):
+    n = hist.GetNbinsX()
+    i = n // 2 + 1
+    while i <= n:
+        j = n - i + 1
+        ci = hist.GetBinContent(i)
+        cj = hist.GetBinContent(j)
+        ei = hist.GetBinError(i)
+        ej = hist.GetBinError(j)
+
+        cavg = 0.5 * (ci + cj)
+        eavg = 0.5 * (ei + ej)
+
+        hist.SetBinContent(i, cavg)
+        hist.SetBinContent(j, cavg)
+        hist.SetBinError(i, eavg)
+        hist.SetBinError(j, eavg)
+
+        i = i + 1
