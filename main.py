@@ -5,7 +5,7 @@
 
 
 from bins import Bins
-from utils import calcAllChi2, calcOneChi2, HistMaker, diffHist
+from utils import calc_all_chi2, calc_one_chi2, HistMaker, diff_hist
 from ROOT import TFile, TH1, TCanvas, TStyle, gStyle, Form
 import math
 
@@ -16,7 +16,7 @@ import math
 bins = Bins.readFrom("ranges.yml")
 histMakerData = HistMaker("088_090_ag123ag_2500A_accepted_np.dat", "_data", bins)
 #histsData = histMakerData.makeHists()
-histsData = histMakerData.makeHists()
+histsData = histMakerData.make_hists()
 #histMakerMC = HistMaker("medium_isotropic_eff_ag1230ag_np_9deg.dat", "_MC", bins    )
 #histMakerMC = HistMaker("mar19_diele_inmedium_heli0cm_np.dat", "_MC", bins    )
 histMakerMC = HistMaker("mar19_diele_pi0_heli0cm_np.dat", "_MC", bins    )
@@ -167,8 +167,8 @@ def objective(xx):
         for x in xx:
             lambda_theta, lambda_phi, lambda_theta_phi = lambdas(x)
 
-            histsMC = histMakerMC.makeHists(lambda_theta, lambda_phi, lambda_theta_phi)
-            chi2, ndf = calcOneChi2(histsMC[0][HIST_INDEX], histsData[0][HIST_INDEX])
+            histsMC = histMakerMC.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+            chi2, ndf = calc_one_chi2(histsMC[0][HIST_INDEX], histsData[0][HIST_INDEX])
             allHistsMC.append(histsMC[0][HIST_INDEX])
             if not chi2 or not ndf:
                 return torch.tensor([0])
@@ -391,7 +391,7 @@ def plotComparison(histMC, histData):
     pad = can.cd(3)
     pad.SetRightMargin(0.155)
     pad = can.cd(3)
-    hdiff = diffHist(histMC, histData)
+    hdiff = diff_hist(histMC, histData)
     hdiff.Draw("COLZ")
     can.Update()
     palette = hdiff.GetListOfFunctions().FindObject("palette")
@@ -504,7 +504,7 @@ def objective2(xx):
         for x in xx:
             lambda_theta, lambda_phi, lambda_theta_phi = lambdas(x)
 
-            histsMC = histMakerMC.makeHists(lambda_theta, lambda_phi, lambda_theta_phi)
+            histsMC = histMakerMC.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
             chi2, ndf = calcOneChi2_2(histsMC[0][HIST_INDEX], histsData[0][HIST_INDEX])
             allHistsMC.append(histsMC[0][HIST_INDEX])
             if not chi2 or not ndf:
