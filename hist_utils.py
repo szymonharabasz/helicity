@@ -1,10 +1,10 @@
 import math
+
+from ROOT import TCanvas, TFile, TMath, TString, TH1F
+
 from eventsreader import SpdmeEventsReader
-from distributionbuilder import DistributionBuilder
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
-from distributionbuilder_1d import DistributionBuilder_1d
 from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
-from ROOT import TCanvas, TFile, TPaveText, gStyle, TMath, TString, TH1F
 
 
 def calc_diff(hist_mc, hist_data, bx, by):
@@ -96,60 +96,6 @@ def make_root_plots(hists_mc, hists_data):
     c.SaveAs("c.gif")
     print("Total hist entries: ", totentries)
 
-
-def set_opt_text(cut_desc, x1, y1, x2, y2, color, text_size):
-    description = TPaveText(x1, y1, x2, y2, "NDC")
-    description.SetLineWidth(0)
-    description.AddText(cut_desc)
-    description.SetTextSize(text_size)
-    description.SetBorderSize(0)
-    description.SetTextFont(62)
-    description.SetTextColor(color)
-    description.SetFillColor(0)
-    description.SetFillStyle(0)
-    description.Draw()
-    return description
-
-
-def set_th1(hist, x_axis_title, y_axis_title, ndevision, marker_style, marker_size, color):
-    hist.GetXaxis().SetTitle(x_axis_title)
-    hist.GetYaxis().SetTitle(y_axis_title)
-    hist.GetXaxis().SetTitleSize(0.06)
-    hist.GetYaxis().SetTitleSize(0.06)
-    hist.GetXaxis().SetTitleFont(42)
-    hist.GetYaxis().SetTitleFont(42)
-    hist.GetXaxis().SetNdivisions(ndevision)
-    hist.GetYaxis().SetTitleOffset(1.5)
-    hist.GetXaxis().SetTitleOffset(0.9)
-
-    hist.GetXaxis().SetLabelFont(42)
-    hist.GetYaxis().SetLabelFont(42)
-    hist.GetXaxis().SetLabelSize(0.05)
-    hist.GetYaxis().SetLabelSize(0.05)
-    hist.SetMarkerStyle(marker_style)
-    hist.SetMarkerSize(marker_size)
-    hist.SetMarkerColor(color)
-    hist.SetLineColor(color)
-    hist.SetLineWidth(2)
-
-
-def set_pad(canvas):
-    gStyle.SetLineStyleString(22, "80 18 12 18 12 12")
-    canvas.SetFillColor(0)
-    canvas.SetBorderMode(0)
-    canvas.SetBorderSize(0)
-    canvas.SetTickx()
-    canvas.SetTicky()
-    canvas.SetFrameLineWidth(2)
-    canvas.SetFrameBorderMode(0)
-    canvas.SetFrameBorderSize(0)
-    canvas.SetLeftMargin(0.17)
-    canvas.SetRightMargin(0.07)
-    canvas.SetTopMargin(0.074)
-    canvas.SetBottomMargin(0.165)
-    canvas.Range(-194.483, -10.3682, 1041.38, -2.08469)
-
-
 def geom_avg(h1, h2, minratio):
     name = TString(h1.GetName())
     name.ReplaceAll("NN", "Avg")
@@ -163,7 +109,8 @@ def geom_avg(h1, h2, minratio):
             for bin_z in range(1, h1.GetNbinsZ()):
                 ratio1 = h1.GetBinContent(bin_x, bin_y, bin_z) / h2.GetBinContent(bin_x, bin_y, bin_z)
                 ratio2 = h2.GetBinContent(bin_x, bin_y, bin_z) / h1.GetBinContent(bin_x, bin_y, bin_z)
-                content = 2 * TMath.Sqrt(h1.GetBinContent(bin_x, bin_y, bin_z) * h2.GetBinContent(bin_x, bin_y, bin_z))
+                content = 2 * TMath.Sqrt(
+                    h1.GetBinContent(bin_x, bin_y, bin_z) * h2.GetBinContent(bin_x, bin_y, bin_z))
                 x = h1.GetBinContent(bin_x, bin_y, bin_z)
                 y = h2.GetBinContent(bin_x, bin_y, bin_z)
                 sx = h1.GetBinError(bin_x, bin_y, bin_z)
@@ -178,7 +125,6 @@ def geom_avg(h1, h2, minratio):
                 result.SetBinContent(bin_x, bin_y, bin_z, content)
                 result.SetBinError(bin_x, bin_y, bin_z, error)
     return result
-
 
 def geom_avg1d(h1, h2, minratio):
     name = TString(h1.GetName())
@@ -215,12 +161,10 @@ def geom_avg1d(h1, h2, minratio):
         result.SetBinError(bin_x, error)
     return result
 
-
 def ratio_err(val_a, val_b, err_a, err_b):
     err2 = math.pow(err_a / val_b, 2.) + math.pow(val_a * err_b / (val_b * val_b), 2.)
     err = math.sqrt(err2)
     return err
-
 
 def symmetrize(hist):
     n = hist.GetNbinsX()
