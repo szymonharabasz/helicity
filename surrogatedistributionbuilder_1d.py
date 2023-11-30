@@ -51,6 +51,5 @@ class SurrogateDistributionBuilder_1d(DistributionBuilder_1d):
 
     def getHists(self) -> list[TH1F]:
         result = self.reweightBaseHists()
-        print ("#2", result)
         return result
 

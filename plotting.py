@@ -18,7 +18,6 @@ can_cmp_ind = 0
 
 
 def plotComparison(can, pad_nr1, pad_nr2, hist_mc, histData, hist_index, pull_title, bins):
-    # print(f"PLOTTING: {histMC.GetName()} and {histData.GetName()}")
     global can_cmp_ind
 
     curr_bin = bins[hist_index]

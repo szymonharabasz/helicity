@@ -69,7 +69,6 @@ class DistributionBuilder_1d:
 
         iter = iter + 1
         result = [hists, [hmassLowM, hmassHigM], [hzLowM, hzHigM]]
-        print ("#1", result)
         return result
 
     def getHists(self) -> list[TH1F]:
