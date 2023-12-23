@@ -11,7 +11,7 @@ class Helicity1d(torch.nn.Module):
         """
         super().__init__()
         self.lambda_theta = torch.nn.Parameter(torch.ones(()))
-        self.norm = torch.nn.Parameter(torch.randn(()))
+        self.norm = torch.nn.Parameter(torch.ones(()))
 
     def forward(self, x):
         """
@@ -53,13 +53,16 @@ def hist_to_tensor(hist):
     return result
 
 def fit_simple(model, hist_data, hist_mc, n_epochs, lr):
-   # hist_mc = hists_mc[0][hist_index]
-   # hist_data = histsData_np[0][hist_index]
+    # hist_mc = hists_mc[0][hist_index]
+    # hist_data = histsData_np[0][hist_index]
 
     train_x = hist_to_tensor(hist_mc)
     train_y = hist_to_tensor(hist_data)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    losses = []
+
     for epoch in range(n_epochs):
         optimizer.zero_grad()
 
@@ -68,5 +71,9 @@ def fit_simple(model, hist_data, hist_mc, n_epochs, lr):
 
         loss.backward()
         optimizer.step()
+
+        losses.append(loss.item())
+
+    return losses
 
        # print("Epoch: {}, loss: {}, param: {}".format(epoch, loss.item(), [param.item() for param in model.parameters()]))
