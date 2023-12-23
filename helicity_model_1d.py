@@ -10,7 +10,7 @@ class Helicity1d(torch.nn.Module):
         member parameters.
         """
         super().__init__()
-        self.lambda_theta = torch.nn.Parameter(torch.randn(()))
+        self.lambda_theta = torch.nn.Parameter(torch.ones(()))
         self.norm = torch.nn.Parameter(torch.randn(()))
 
     def forward(self, x):
@@ -30,12 +30,13 @@ class Helicity1d(torch.nn.Module):
         return f'y = (1 + {self.lambda_theta.item()} x^2'
 
 def chi2_loss(pred_y, y):
-   # print("Loss:")
-   # print(y[1])
-   # print(pred_y[1])
-   # print(pred_y[2])
-    mask = pred_y > 0
-    return (((y[1] - pred_y[1])/y[2]) ** 2).sum()
+    mask1 = y[1] > 0
+    mask2 = pred_y[1] > 0
+    mask = torch.logical_and(mask1, mask2)
+    indices = torch.nonzero(mask)
+    # print("y[1] ", y[1])
+    # print("y[1][indices] ", y[1][indices])
+    return (((y[1][indices] - pred_y[1][indices])/y[2][indices]) ** 2).sum()
 
 
 def hist_to_tensor(hist):
@@ -51,16 +52,15 @@ def hist_to_tensor(hist):
     result = torch.stack(columns).transpose(0,1)
     return result
 
-def fit_simple(model, hist_data, hist_mc):
+def fit_simple(model, hist_data, hist_mc, n_epochs, lr):
    # hist_mc = hists_mc[0][hist_index]
    # hist_data = histsData_np[0][hist_index]
 
     train_x = hist_to_tensor(hist_mc)
     train_y = hist_to_tensor(hist_data)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
-    N_EPOCHS = 500
-    for epoch in range(N_EPOCHS):
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    for epoch in range(n_epochs):
         optimizer.zero_grad()
 
         output = model(train_x)
