@@ -16,6 +16,7 @@ class Event:
         self.four_momenta = []
         self.mass = 0.
         self.z = 0.
+        self.y = 0.
         self.theta = 0.
         self.phi = 0.
 
@@ -133,8 +134,9 @@ class SpdmeEventsReader(EventsReader):
                 math.pow(event.get_pz(0), 2)
             )
         except ValueError:
-            print("ERROR! Wrong values: ", math.pow(event.get_energy(0), 2), math.pow(event.get_px(0), 2), math.pow(event.get_py(0), 2), math.pow(event.get_pz(0), 2))
-            print(event.get_energy(0), event.get_px(0), event.get_py(0), event.get_pz(0))
+            pass
+           # print("ERROR! Wrong values: ", math.pow(event.get_energy(0), 2), math.pow(event.get_px(0), 2), math.pow(event.get_py(0), 2), math.pow(event.get_pz(0), 2))
+           # print(event.get_energy(0), event.get_px(0), event.get_py(0), event.get_pz(0))
 
         gamma = event.get_four_momentum(0)
         lepton = event.get_four_momentum(2)
@@ -180,3 +182,4 @@ class SpdmeEventsReader(EventsReader):
             _, _, event.phi = self.get_phis(vec_gamma, vec_gamma_cm, vec_lepton_gamma)
 
         event.z = TMath.Cos(vec_gamma_cm.Theta())
+        event.y = vec_gamma_cm.Rapidity()

@@ -47,7 +47,7 @@ class SurrogateDistributionBuilder_1d(DistributionBuilder_1d):
        # hzLowM = self.base_hists[2][0]
 
         iter = iter + 1
-        return [hists, self.base_hists[1], self.base_hists[2]]
+        return [hists, self.base_hists[1], self.base_hists[2], self.base_hists[3]]
 
     def getHists(self) -> list[TH1F]:
         result = self.reweightBaseHists()
