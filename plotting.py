@@ -88,6 +88,7 @@ def plot_losses(losses_all, range_used):
         ax[HIST_INDEX // 3][HIST_INDEX % 3].set_ylabel("Loss ($\chi^2$)")
         ax[HIST_INDEX // 3][HIST_INDEX % 3].set_xscale("log")
         ax[HIST_INDEX // 3][HIST_INDEX % 3].set_yscale("log")
+    return fig, ax
 
 canvases = []
 hdiffs = []
