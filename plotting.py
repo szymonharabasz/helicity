@@ -2,6 +2,10 @@ import math
 
 from hist_template import set_pad, set_th1
 from hist_utils import diff_hist
+import matplotlib.pyplot as plt
+from ROOT import TCanvas
+from hist_template import set_opt_text
+from hist_utils import ratio_err
 
 axis_title = r"$cos(\theta_e^{\gamma*})$"
 
@@ -72,3 +76,63 @@ def xAxisProperties(histMC, histData):
     def bin_index(x, min, max):
         return int((x - min) / (max - min) * 101)
 
+def plot_losses(losses_all, range_used):
+    fig, ax = plt.subplots(nrows=4, ncols=3)
+    fig.tight_layout()
+    fig.set_figheight(20)
+    fig.set_figwidth(15)
+    for HIST_INDEX in range_used:
+        # print(losses_all[HIST_INDEX])
+        ax[HIST_INDEX // 3][HIST_INDEX % 3].plot(losses_all[HIST_INDEX])
+        ax[HIST_INDEX // 3][HIST_INDEX % 3].set_xlabel("Epoch")
+        ax[HIST_INDEX // 3][HIST_INDEX % 3].set_ylabel("Loss ($\chi^2$)")
+        ax[HIST_INDEX // 3][HIST_INDEX % 3].set_xscale("log")
+        ax[HIST_INDEX // 3][HIST_INDEX % 3].set_yscale("log")
+
+canvases = []
+hdiffs = []
+hmodels = []
+paveTexts = []
+def show_results(sign, DIR_NAME, range_used, parameters_all, fn_get_hist_maker_mc, bins, histsData):
+    with open(f'{DIR_NAME}/results_{sign}.txt', 'w') as fout:
+        for HIST_INDEX in range_used:
+
+            # ax = plt.axes()
+            # fig, ax = plt.subplots(nrows=1, ncols=1)
+            lambda_theta = parameters_all[HIST_INDEX][0].item()
+            bestHistsMC = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(lambda_theta)
+            hmodels.append(bestHistsMC[0][HIST_INDEX])
+
+            if HIST_INDEX % 3 == 0:
+                can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 600)
+                can1.Divide(3, 2)
+                can1.Draw()
+                canvases.append(can1)
+
+            hdiff1 = plotComparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, bestHistsMC[0][HIST_INDEX],
+                                    histsData[0][HIST_INDEX], HIST_INDEX, "Best", bins)
+            hdiffs.append(hdiff1)
+
+            n, meanX2, varX2, sigma2 = xAxisProperties(bestHistsMC[0][HIST_INDEX], histsData[0][HIST_INDEX])
+            errB0 = math.sqrt(sigma2 * (1 / n + meanX2 * meanX2 / varX2))
+            errB1 = math.sqrt(sigma2 / varX2)
+            ratio_error = ratio_err(lambda_theta, 1, errB1, errB0)
+
+            can1.cd(HIST_INDEX % 3 + 1)
+
+            caption = f"#lambda_{{#theta}} = {lambda_theta:.2f} #pm {ratio_error:.2f}"
+            if HIST_INDEX < 6:
+                paveText = set_opt_text(caption, 0.25, 0.26, 0.675, 0.38, 2, 0.04)
+            else:
+                paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
+            paveTexts.append(paveText)
+
+            if HIST_INDEX % 3 == 2:
+                can1.SaveAs(f"{DIR_NAME}/comparison_{HIST_INDEX}.gif")
+
+            try:
+                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta, " +- ", ratio_error)
+                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta, " +- ", ratio_error, file=fout)
+            except:
+                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta)
+                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta, file=fout)
