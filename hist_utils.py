@@ -2,10 +2,10 @@ import math
 
 from ROOT import TCanvas, TFile, TMath, TString, TH1F
 
-from eventsreader import SpdmeEventsReader
+from eventsreader import SpdmeEventsReader, PickleEventsReader
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
-
+import os.path
 
 def calc_diff(hist_mc, hist_data, bx, by):
     content_mc = hist_mc.GetBinContent(bx + 1, by + 1) / hist_mc.Integral()
@@ -52,7 +52,15 @@ def calc_all_chi2(hists_mc, hists_data):
 
 class HistMaker:
     def __init__(self, filename, name_suffix, bins, frame, ekin):
-        self.reader = SpdmeEventsReader(filename, frame, ekin)
+        filename_pickle = filename
+        filename_pickle = filename_pickle.replace(".dat",".pkl")
+        if os.path.isfile(filename_pickle):
+            print("Pickle file exists")
+            self.reader = PickleEventsReader(filename_pickle, frame, ekin)
+        else:
+            print("Picke file doesn't exist")
+            self.reader = SpdmeEventsReader(filename, frame, ekin)
+        # self.reader = SpdmeEventsReader(filename, frame, ekin)
         # self.builder = DistributionBuilder(name_suffix, self.reader.getEvents(), bins)
         self.builder = SurrogateDistributionBuilder(name_suffix, self.reader.get_events(), bins)
 
@@ -63,7 +71,14 @@ class HistMaker:
 
 class HistMaker1d:
     def __init__(self, filename, name_suffix, bins, frame, ekin):
-        self.reader = SpdmeEventsReader(filename, frame, ekin)
+        filename_pickle = filename
+        filename_pickle = filename_pickle.replace(".dat", ".pkl")
+        if os.path.isfile(filename_pickle):
+            print("Pickle file exists")
+            self.reader = PickleEventsReader(filename_pickle, frame, ekin)
+        else:
+            print("Picke file doesn't exist")
+            self.reader = SpdmeEventsReader(filename, frame, ekin)
         # self.builder = DistributionBuilder_1d(name_suffix, self.reader.getEvents(), bins)
         self.builder = SurrogateDistributionBuilder_1d(name_suffix, self.reader.get_events(), bins)
 

@@ -1,5 +1,7 @@
 results_*
 .ipynb_checkpoints
+*pkl
+*.pkl
 *.pth
 *.dat
 *.gif

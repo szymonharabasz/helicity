@@ -1,4 +1,5 @@
 import math
+import pickle
 from ROOT import TLorentzVector, TMath
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -63,6 +64,13 @@ class EventsReader(ABC):
     def get_event(self, i):
         return self.get_events()[i]
 
+class PickleEventsReader(EventsReader):
+    def __init__(self, filename, frame, ekin):
+        super().__init__(filename, frame, ekin)
+
+    def read_events(self):
+        with open(self.filename, 'rb') as f:
+            self.events = pickle.load(f)  # deserialize using load()
 
 class SpdmeEventsReader(EventsReader):
 
@@ -94,6 +102,12 @@ class SpdmeEventsReader(EventsReader):
             else:
                 self.events[-1].four_momenta.append(tuple(numbers))
             i = i + 1
+
+        filename_pickle = self.filename
+        filename_pickle = filename_pickle.replace(".dat", ".pkl")
+        print("filename_picke: ", filename_pickle)
+        with open(filename_pickle, 'wb') as f:  # open a text file
+            pickle.dump(self.events, f)  # serialize the list
 
     def get_phis(self, dilep, dilep_cm, ev4_dilep):
         beam = TLorentzVector(0., 0., self.pp, self.Ep)
