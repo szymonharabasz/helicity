@@ -94,15 +94,16 @@ canvases = []
 hdiffs = []
 hmodels = []
 paveTexts = []
-def show_results(sign, DIR_NAME, range_used, parameters_all, fn_get_hist_maker_mc, bins, histsData):
-    with open(f'{DIR_NAME}/results_{sign}.txt', 'w') as fout:
+def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_mc, bins, hists_data):
+    with open(f'{dir_name}/results_{sign}.txt', 'w') as fout:
         for HIST_INDEX in range_used:
 
             # ax = plt.axes()
             # fig, ax = plt.subplots(nrows=1, ncols=1)
             lambda_theta = parameters_all[HIST_INDEX][0].item()
-            bestHistsMC = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(lambda_theta)
-            hmodels.append(bestHistsMC[0][HIST_INDEX])
+            #norm = parameters_all[HIST_INDEX][1].item()
+            best_hists_mc = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(lambda_theta)
+            hmodels.append(best_hists_mc[0][HIST_INDEX])
 
             if HIST_INDEX % 3 == 0:
                 can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 600)
@@ -110,11 +111,11 @@ def show_results(sign, DIR_NAME, range_used, parameters_all, fn_get_hist_maker_m
                 can1.Draw()
                 canvases.append(can1)
 
-            hdiff1 = plotComparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, bestHistsMC[0][HIST_INDEX],
-                                    histsData[0][HIST_INDEX], HIST_INDEX, "Best", bins)
+            hdiff1 = plotComparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, best_hists_mc[0][HIST_INDEX],
+                                    hists_data[0][HIST_INDEX], HIST_INDEX, "Best", bins)
             hdiffs.append(hdiff1)
 
-            n, meanX2, varX2, sigma2 = xAxisProperties(bestHistsMC[0][HIST_INDEX], histsData[0][HIST_INDEX])
+            n, meanX2, varX2, sigma2 = xAxisProperties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
             errB0 = math.sqrt(sigma2 * (1 / n + meanX2 * meanX2 / varX2))
             errB1 = math.sqrt(sigma2 / varX2)
             ratio_error = ratio_err(lambda_theta, 1, errB1, errB0)
@@ -126,10 +127,11 @@ def show_results(sign, DIR_NAME, range_used, parameters_all, fn_get_hist_maker_m
                 paveText = set_opt_text(caption, 0.25, 0.26, 0.675, 0.38, 2, 0.04)
             else:
                 paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
+            #paveText.AddText(f"Norm = {norm:.5f}")
             paveTexts.append(paveText)
 
             if HIST_INDEX % 3 == 2:
-                can1.SaveAs(f"{DIR_NAME}/comparison_{HIST_INDEX}.gif")
+                can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
 
             try:
                 print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta, " +- ", ratio_error)
