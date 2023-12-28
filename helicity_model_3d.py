@@ -24,11 +24,12 @@ class Helicity3d(torch.nn.Module):
         a Tensor of output data. We can use Modules defined in the constructor as
         well as arbitrary operators on Tensors.
         """
-        theta = x[0]
+        cosTheta = x[0]
+        theta = torch.acos(cosTheta)
         phi = x[1]
-        weight = (1.0 + self.lambda_theta * torch.cos(theta) ** 2 +
-                  self.lambda_phi * torch.sin(theta) ** 2 * torch.cos(phi) +
-                  self.lambda_theta_phi * torch.sin(theta) * torch.cos(phi))
+        weight = (1.0 + self.lambda_theta * cosTheta ** 2 +
+                  self.lambda_phi * torch.sin(theta) ** 2 * torch.cos(2*phi) +
+                  self.lambda_theta_phi * torch.sin(2*theta) * torch.cos(phi))
         if self.learn_norm:
             return torch.vstack([
                 theta,

@@ -21,31 +21,64 @@ def oneplot(xs, ax, tensor, title):
 can_cmp_ind = 0
 
 
-def plotComparison(can, pad_nr1, pad_nr2, hist_mc, histData, hist_index, pull_title, bins):
+def plot_comparison(can, pad_nr1, pad_nr2, hist_mc, hist_data, hist_index, pull_title, bins):
     global can_cmp_ind
 
     curr_bin = bins[hist_index]
     title = (f"{curr_bin.m_min} < #it{{M}}_{{ee}} < {curr_bin.m_max}, {curr_bin.z_min} < cos(#theta^{{CM}}_{{"
              f"#gamma*}}) < {curr_bin.z_max}")
 
-    pad = can.cd(pad_nr1)
-    set_pad(pad)
-    pad.SetRightMargin(0.16)
-    histData.GetXaxis().SetTitle("cos(#theta_{e}^{#gamma*})")
-    histData.SetTitle(title)
-    set_th1(histData, histData.GetXaxis().GetTitle(), f"dN/d{histData.GetXaxis().GetTitle()} (a.u.)",
-            505, 20, 0.8, 1)
-    histData.Draw()
-    hist_mc.Scale(histData.Integral() / hist_mc.Integral())
-    hist_mc.SetLineColor(2)
-    hist_mc.Draw("SAMEHIST")
+    plot_one_comparison(can, pad_nr1, hist_mc, hist_data, title, "cos(#theta_{e}^{#gamma*})")
+
     pad = can.cd(pad_nr2)
     set_pad(pad)
     pad.SetRightMargin(0.16)
-    hdiff = diff_hist(hist_mc, histData)
+    hdiff = diff_hist(hist_mc, hist_data)
     hdiff.SetTitle(pull_title)
     set_th1(hdiff, hdiff.GetXaxis().GetTitle(), "Pull value", 505, 20, 0.8, 2)
     hdiff.Draw("HIST")
+    can.Update()
+    can.Modified()
+    can.Update()
+
+    return hdiff
+
+
+def plot_one_comparison(can, pad_nr, hist_mc, hist_data, title, xtitle):
+    pad = can.cd(pad_nr)
+    set_pad(pad)
+    pad.SetRightMargin(0.16)
+    hist_data.GetXaxis().SetTitle(xtitle)
+    hist_data.SetTitle(title)
+    set_th1(hist_data, hist_data.GetXaxis().GetTitle(), f"dN/d{hist_data.GetXaxis().GetTitle()} (a.u.)",
+            505, 20, 0.8, 1)
+    hist_data.Draw()
+    hist_mc.Scale(hist_data.Integral() / hist_mc.Integral())
+    hist_mc.SetLineColor(2)
+    hist_mc.Draw("SAMEHIST")
+
+
+def plot_comparison_2d(can, pad_nr1, pad_nr2, pad_nr3, hist_mc, hist_data, hist_index, pull_title, bins):
+    global can_cmp_ind
+
+    curr_bin = bins[hist_index]
+    title = (f"{curr_bin.m_min} < #it{{M}}_{{ee}} < {curr_bin.m_max}, {curr_bin.z_min} < cos(#theta^{{CM}}_{{"
+             f"#gamma*}}) < {curr_bin.z_max}")
+
+    hist_data_px = hist_data.ProjectionX()
+    hist_mc_px = hist_mc.ProjectionX()
+    plot_one_comparison(can, pad_nr1, hist_mc_px, hist_data_px, title, "cos(#theta_{e}^{#gamma*})")
+    hist_data_py = hist_data.ProjectionY()
+    hist_mc_py = hist_mc.ProjectionY()
+    plot_one_comparison(can, pad_nr2, hist_mc_py, hist_data_py, title, "#phi_{e}^{#gamma*}")
+
+    pad = can.cd(pad_nr3)
+    set_pad(pad)
+    pad.SetRightMargin(0.16)
+    hdiff = diff_hist(hist_mc, hist_data)
+    hdiff.SetTitle(pull_title)
+    set_th1(hdiff, hdiff.GetXaxis().GetTitle(), hdiff.GetYaxis().GetTitle(), 505, 20, 0.8, 2)
+    hdiff.Draw("COLZ")
     can.Update()
     can.Modified()
     can.Update()
@@ -111,8 +144,8 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 can1.Draw()
                 canvases.append(can1)
 
-            hdiff1 = plotComparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, best_hists_mc[0][HIST_INDEX],
-                                    hists_data[0][HIST_INDEX], HIST_INDEX, "Best", bins)
+            hdiff1 = plot_comparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, best_hists_mc[0][HIST_INDEX],
+                                    hists_data[0][HIST_INDEX], HIST_INDEX, "Residuals", bins)
             hdiffs.append(hdiff1)
 
             n, meanX2, varX2, sigma2 = xAxisProperties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
