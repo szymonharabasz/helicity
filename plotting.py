@@ -92,7 +92,7 @@ def xAxisProperties(histMC, histData):
     for i, (c1, c2) in enumerate(zip(histMC, histData)):
         if c1 != 0 and c2 != 0:
             n = n + 1
-            meanX2 = meanX2 + math.pow(histMC.GetBinCenter(i + 1), 2)
+            meanX2 = meanX2 + math.pow(histMC.GetXaxis().GetBinCenter(i + 1), 2)
     if n > 0:
         meanX2 = meanX2 / n
     varX2 = 0
@@ -134,6 +134,9 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
             # ax = plt.axes()
             # fig, ax = plt.subplots(nrows=1, ncols=1)
             lambda_theta = parameters_all[HIST_INDEX][0].item()
+            if analyse_3d:
+                lambda_phi = parameters_all[HIST_INDEX][1].item()
+                lambda_theta_phi = parameters_all[HIST_INDEX][2].item()
             #norm = parameters_all[HIST_INDEX][1].item()
             best_hists_mc = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(lambda_theta)
             hmodels.append(best_hists_mc[0][HIST_INDEX])
@@ -141,8 +144,10 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
             if HIST_INDEX % 3 == 0:
                 can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 600)
                 if analyse_3d:
+                    can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 900)
                     can1.Divide(3, 3)
                 else:
+                    can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 600)
                     can1.Divide(3, 2)
                 can1.Draw()
                 canvases.append(can1)
@@ -169,14 +174,26 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
             else:
                 paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
             #paveText.AddText(f"Norm = {norm:.5f}")
+            if analyse_3d:
+                paveText.AddText(f"#lambda_{{#phi}} = {lambda_phi:.2f}")
+                paveText.AddText(f"#lambda_{{#theta#phi}} = {lambda_theta_phi:.2f}")
             paveTexts.append(paveText)
 
             if HIST_INDEX % 3 == 2:
                 can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
 
-            try:
-                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta, " +- ", ratio_error)
-                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta, " +- ", ratio_error, file=fout)
-            except:
-                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta)
-                print(str(HIST_INDEX) + ". Final result: lambda_theta = ", lambda_theta, file=fout)
+            if analyse_3d:
+                try:
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}, lambda_phi = {lambda_phi:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f}")
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}, lambda_phi = {lambda_phi:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f}",
+                          file=fout)
+                except:
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}")
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}", file=fout)
+            else:
+                try:
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}")
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}", file=fout)
+                except:
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}")
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}", file=fout)
