@@ -3,7 +3,7 @@ import math
 from hist_template import set_pad, set_th1
 from hist_utils import diff_hist
 import matplotlib.pyplot as plt
-from ROOT import TCanvas
+from ROOT import TCanvas, TH2F
 from hist_template import set_opt_text
 from hist_utils import ratio_err
 
@@ -127,7 +127,7 @@ canvases = []
 hdiffs = []
 hmodels = []
 paveTexts = []
-def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_mc, bins, hists_data):
+def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_mc, bins, hists_data, analyse_3d):
     with open(f'{dir_name}/results_{sign}.txt', 'w') as fout:
         for HIST_INDEX in range_used:
 
@@ -140,12 +140,20 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
 
             if HIST_INDEX % 3 == 0:
                 can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 600)
-                can1.Divide(3, 2)
+                if analyse_3d:
+                    can1.Divide(3, 3)
+                else:
+                    can1.Divide(3, 2)
                 can1.Draw()
                 canvases.append(can1)
 
-            hdiff1 = plot_comparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, best_hists_mc[0][HIST_INDEX],
-                                    hists_data[0][HIST_INDEX], HIST_INDEX, "Residuals", bins)
+            if analyse_3d:
+                hdiff1 = plot_comparison_2d(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, HIST_INDEX % 3 + 7, best_hists_mc[0][HIST_INDEX],
+                                        hists_data[0][HIST_INDEX], HIST_INDEX, "Residuals", bins)
+            else:
+                hdiff1 = plot_comparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, best_hists_mc[0][HIST_INDEX],
+                                         hists_data[0][HIST_INDEX], HIST_INDEX, "Residuals", bins)
+
             hdiffs.append(hdiff1)
 
             n, meanX2, varX2, sigma2 = xAxisProperties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
