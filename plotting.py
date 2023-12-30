@@ -1,6 +1,6 @@
 import math
 
-from error_matrix import errors_1d_hists
+from error_matrix import errors_1d_hists, errors_3d_hists
 from hist_template import set_pad, set_th1
 from hist_utils import diff_hist
 import matplotlib.pyplot as plt
@@ -237,16 +237,21 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 if HIST_INDEX % 3 == 2:
                     can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
 
-                # print("Maybe covariance matrix:")
-                # err_matr = errors_1d_hists(hists_data[0][HIST_INDEX])
-                # print(err_matr)
-                # print("Compare:")
-                # errB0new = math.sqrt(err_matr[0, 0].item())
-                # errB1new = math.sqrt(err_matr[1, 1].item())
-                # ratio_new = ratio_err(lambda_theta, 1, errB1new, errB0new)
-                # print(f"Old: {errB0}, new: {errB0new}")
-                # print(f"Old: {errB1}, new: {errB1new}")
-                # print(f"Old: {ratio_error}, new: {ratio_new}, new/old: {ratio_new / ratio_error}")
+                print("Maybe covariance matrix:")
+                hists_mc_null = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(0.0)
+                err_matr = errors_3d_hists(hists_data[0][HIST_INDEX], hists_mc_null[0][HIST_INDEX])
+                print(err_matr)
+                print("Compare:")
+                errB0new = math.sqrt(err_matr[0, 0].item())
+                errB1new = math.sqrt(err_matr[1, 1].item())
+                errB2new = math.sqrt(err_matr[2, 2].item())
+                errB3new = math.sqrt(err_matr[3, 3].item())
+                ratio_new1 = ratio_err(lambda_theta, 1, errB1new, errB0new)
+                ratio_new2 = ratio_err(lambda_theta_phi, 1, errB2new, errB0new)
+                ratio_new3 = ratio_err(lambda_phi, 1, errB3new, errB0new)
+                print(f"Old: {ratio_error1}, new: {ratio_new1}, new/old: {ratio_new1 / ratio_error1}")
+                print(f"Old: {ratio_error2}, new: {ratio_new2}, new/old: {ratio_new2 / ratio_error2}")
+                print(f"Old: {ratio_error3}, new: {ratio_new3}, new/old: {ratio_new3 / ratio_error3}")
 
                 try:
                     print(
