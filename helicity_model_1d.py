@@ -2,7 +2,7 @@ import torch
 from hist_utils import calc_one_chi2, HistMaker1d, geom_avg1d, ratio_err, symmetrize
 from eventsreader import Frame
 from bins import Bins
-
+from torch.autograd.functional import hessian
 
 class Helicity1d(torch.nn.Module):
     def __init__(self, learn_norm):
@@ -108,6 +108,15 @@ def fit_simple(model, hist_data, hist_mc, n_epochs, lr, learn_norm):
         optimizer.step()
 
         losses.append(loss.item())
+
+    def loss_for_hessian(lambda_theta):
+        print("type of lambda_theta: ", type(lambda_theta))
+        model.lambda_theta = torch.nn.Parameter(lambda_theta)
+        y_pred = model(train_x)
+        return chi2_loss(y_pred, train_y)
+
+    H = hessian(loss_for_hessian, model.lambda_theta)
+    print("Hessian ", H)
 
     return losses
 

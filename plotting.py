@@ -1,9 +1,10 @@
 import math
 
+from error_matrix import errors_1d_hists
 from hist_template import set_pad, set_th1
 from hist_utils import diff_hist
 import matplotlib.pyplot as plt
-from ROOT import TCanvas, TH2F
+from ROOT import TCanvas
 from hist_template import set_opt_text
 from hist_utils import ratio_err
 
@@ -86,28 +87,74 @@ def plot_comparison_2d(can, pad_nr1, pad_nr2, pad_nr3, hist_mc, hist_data, hist_
     return hdiff
 
 
-def xAxisProperties(histMC, histData):
+def x_axis_properties(hist_mc, hist_data):
     n = 0
-    meanX2 = 0
-    for i, (c1, c2) in enumerate(zip(histMC, histData)):
+    mean_x2 = 0
+    for i, (c1, c2) in enumerate(zip(hist_mc, hist_data)):
         if c1 != 0 and c2 != 0:
             n = n + 1
-            meanX2 = meanX2 + math.pow(histMC.GetXaxis().GetBinCenter(i + 1), 2)
+            mean_x2 = mean_x2 + math.pow(hist_mc.GetXaxis().GetBinCenter(i + 1), 2)
     if n > 0:
-        meanX2 = meanX2 / n
-    varX2 = 0
+        mean_x2 = mean_x2 / n
+    var_x2 = 0
     sigma2 = 0
-    for i, (c1, c2) in enumerate(zip(histMC, histData)):
+    for i, (c1, c2) in enumerate(zip(hist_mc, hist_data)):
         if c1 != 0 and c2 != 0:
-            center = histData.GetXaxis().GetBinCenter(i + 1)
-            varX2 = varX2 + math.pow(math.pow(center, 2) - meanX2, 2)
+            center = hist_data.GetXaxis().GetBinCenter(i + 1)
+            var_x2 = var_x2 + math.pow(math.pow(center, 2) - mean_x2, 2)
             sigma2 = sigma2 + math.pow((c2 - c1) / c1, 2)
     if n > 2:
         sigma2 = sigma2 / (n - 2)
-    return n, meanX2, varX2, sigma2
+    return n, mean_x2, var_x2, sigma2
+
+
+def dist_properties(hist_mc, hist_data):
+    n = 0
+    mean_cos2_theta = 0
+    mean_sin_2theta_cos_phi = 0
+    mean_sin2_theta_cos_2phi = 0
+    nx = hist_data.GetNbinsX()
+    ny = hist_data.GetNbinsY()
+    for bx in range(1, nx + 1):
+        for by in range(1, ny + 1):
+            c1 = hist_mc.GetBinContent(bx, by)
+            c2 = hist_data.GetBinContent(bx, by)
+            if c1 != 0 and c2 != 0:
+                n = n + 1
+                cos_theta = hist_mc.GetXaxis().GetBinCenter(bx)
+                theta = math.acos(cos_theta)
+                phi = hist_mc.GetYaxis().GetBinCenter(by)
+                mean_cos2_theta = mean_cos2_theta + cos_theta ** 2
+                mean_sin_2theta_cos_phi = mean_sin_2theta_cos_phi + math.sin(2*theta) * math.cos(phi)
+                mean_sin2_theta_cos_2phi = mean_sin2_theta_cos_2phi + math.sin(theta) ** 2 * math.cos(2*phi)
+    if n > 0:
+        mean_cos2_theta = mean_cos2_theta / n
+        mean_sin_2theta_cos_phi = mean_sin_2theta_cos_phi / n
+        mean_sin2_theta_cos_2phi = mean_sin2_theta_cos_2phi / n
+    var_cos2_theta = 0
+    var_sin_2theta_cos_phi = 0
+    var_sin2_theta_cos_2phi = 0
+    sigma2 = 0
+    for bx in range(1, nx + 1):
+        for by in range(1, ny + 1):
+            c1 = hist_mc.GetBinContent(bx, by)
+            c2 = hist_data.GetBinContent(bx, by)
+            if c1 != 0 and c2 != 0:
+                cos_theta = hist_mc.GetXaxis().GetBinCenter(bx)
+                theta = math.acos(cos_theta)
+                phi = hist_mc.GetYaxis().GetBinCenter(by)
+                var_cos2_theta = var_cos2_theta + (cos_theta ** 2 - mean_cos2_theta) ** 2
+                var_sin_2theta_cos_phi = var_sin_2theta_cos_phi + (math.sin(2*theta) * math.cos(phi) - mean_sin_2theta_cos_phi) ** 2
+                var_sin2_theta_cos_2phi = var_sin2_theta_cos_2phi + (math.sin(theta) ** 2 * math.cos(2*phi) - mean_sin2_theta_cos_2phi) ** 2
+                sigma2 = sigma2 + math.pow((c2 - c1) / c1, 2)
+    if n > 2:
+        sigma2 = sigma2 / (n - 2)
+    return n, mean_cos2_theta, var_cos2_theta, mean_sin_2theta_cos_phi, var_sin_2theta_cos_phi, mean_sin2_theta_cos_2phi, var_sin2_theta_cos_2phi, sigma2
+
 
     def bin_index(x, min, max):
         return int((x - min) / (max - min) * 101)
+
 
 def plot_losses(losses_all, range_used):
     fig, ax = plt.subplots(nrows=4, ncols=3)
@@ -123,10 +170,13 @@ def plot_losses(losses_all, range_used):
         ax[HIST_INDEX // 3][HIST_INDEX % 3].set_yscale("log")
     return fig, ax
 
+
 canvases = []
 hdiffs = []
 hmodels = []
 paveTexts = []
+
+
 def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_mc, bins, hists_data, analyse_3d):
     with open(f'{dir_name}/results_{sign}.txt', 'w') as fout:
         for HIST_INDEX in range_used:
@@ -137,7 +187,7 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
             if analyse_3d:
                 lambda_phi = parameters_all[HIST_INDEX][1].item()
                 lambda_theta_phi = parameters_all[HIST_INDEX][2].item()
-            #norm = parameters_all[HIST_INDEX][1].item()
+            # norm = parameters_all[HIST_INDEX][1].item()
             best_hists_mc = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(lambda_theta)
             hmodels.append(best_hists_mc[0][HIST_INDEX])
 
@@ -153,47 +203,95 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 canvases.append(can1)
 
             if analyse_3d:
-                hdiff1 = plot_comparison_2d(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, HIST_INDEX % 3 + 7, best_hists_mc[0][HIST_INDEX],
-                                        hists_data[0][HIST_INDEX], HIST_INDEX, "Residuals", bins)
+                hdiff1 = plot_comparison_2d(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, HIST_INDEX % 3 + 7,
+                                            best_hists_mc[0][HIST_INDEX],
+                                            hists_data[0][HIST_INDEX], HIST_INDEX, "Residuals", bins)
             else:
                 hdiff1 = plot_comparison(can1, HIST_INDEX % 3 + 1, HIST_INDEX % 3 + 4, best_hists_mc[0][HIST_INDEX],
                                          hists_data[0][HIST_INDEX], HIST_INDEX, "Residuals", bins)
 
             hdiffs.append(hdiff1)
 
-            n, meanX2, varX2, sigma2 = xAxisProperties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
-            errB0 = math.sqrt(sigma2 * (1 / n + meanX2 * meanX2 / varX2))
-            errB1 = math.sqrt(sigma2 / varX2)
-            ratio_error = ratio_err(lambda_theta, 1, errB1, errB0)
-
-            can1.cd(HIST_INDEX % 3 + 1)
-
-            caption = f"#lambda_{{#theta}} = {lambda_theta:.2f} #pm {ratio_error:.2f}"
-            if HIST_INDEX < 6:
-                paveText = set_opt_text(caption, 0.25, 0.26, 0.675, 0.38, 2, 0.04)
-            else:
-                paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
-            #paveText.AddText(f"Norm = {norm:.5f}")
             if analyse_3d:
-                paveText.AddText(f"#lambda_{{#phi}} = {lambda_phi:.2f}")
-                paveText.AddText(f"#lambda_{{#theta#phi}} = {lambda_theta_phi:.2f}")
-            paveTexts.append(paveText)
+                n, mean1, var1, mean2, var2, mean3, var3, sigma2 = dist_properties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
+                errB0 = math.sqrt(sigma2 * (1 / n + mean1 ** 2 / var1 + mean2 ** 2 / var2 + mean3 ** 2 / var3))
+                errB1 = math.sqrt(sigma2 / var1)
+                errB2 = math.sqrt(sigma2 / var2)
+                errB3 = math.sqrt(sigma2 / var3)
+                ratio_error1 = ratio_err(lambda_theta, 1, errB1, errB0)
+                ratio_error2 = ratio_err(lambda_theta_phi, 1, errB2, errB0)
+                ratio_error3 = ratio_err(lambda_phi, 1, errB3, errB0)
 
-            if HIST_INDEX % 3 == 2:
-                can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
+                can1.cd(HIST_INDEX % 3 + 1)
 
-            if analyse_3d:
+                caption = f"#lambda_{{#theta}} = {lambda_theta:.2f} #pm {ratio_error1:.2f}"
+                if HIST_INDEX < 6:
+                    paveText = set_opt_text(caption, 0.25, 0.26, 0.675, 0.38, 2, 0.04)
+                else:
+                    paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
+                # paveText.AddText(f"Norm = {norm:.5f}")
+                paveText.AddText(f"#lambda_{{#phi}} = {lambda_phi:.2f} #pm {ratio_error3:.2f}")
+                paveText.AddText(f"#lambda_{{#theta#phi}} = {lambda_theta_phi:.2f} #pm {ratio_error2:.2f}")
+                paveTexts.append(paveText)
+
+                if HIST_INDEX % 3 == 2:
+                    can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
+
+                # print("Maybe covariance matrix:")
+                # err_matr = errors_1d_hists(hists_data[0][HIST_INDEX])
+                # print(err_matr)
+                # print("Compare:")
+                # errB0new = math.sqrt(err_matr[0, 0].item())
+                # errB1new = math.sqrt(err_matr[1, 1].item())
+                # ratio_new = ratio_err(lambda_theta, 1, errB1new, errB0new)
+                # print(f"Old: {errB0}, new: {errB0new}")
+                # print(f"Old: {errB1}, new: {errB1new}")
+                # print(f"Old: {ratio_error}, new: {ratio_new}, new/old: {ratio_new / ratio_error}")
+
                 try:
-                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}, lambda_phi = {lambda_phi:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f}")
-                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}, lambda_phi = {lambda_phi:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f}",
-                          file=fout)
+                    print(
+                        f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error1:.4f}, lambda_phi = {lambda_phi:.4f} +- {ratio_error3:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f} +- {ratio_error2:.4f}")
+                    print(
+                        f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error1:.4f}, lambda_phi = {lambda_phi:.4f} +- {ratio_error3:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f} +- {ratio_error2:.4f}",
+                        file=fout)
                 except:
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}")
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}", file=fout)
             else:
+                n, meanX2, varX2, sigma2 = x_axis_properties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
+                errB0 = math.sqrt(sigma2 * (1 / n + meanX2 * meanX2 / varX2))
+                errB1 = math.sqrt(sigma2 / varX2)
+                ratio_error = ratio_err(lambda_theta, 1, errB1, errB0)
+
+                can1.cd(HIST_INDEX % 3 + 1)
+
+                caption = f"#lambda_{{#theta}} = {lambda_theta:.2f} #pm {ratio_error:.2f}"
+                if HIST_INDEX < 6:
+                    paveText = set_opt_text(caption, 0.25, 0.26, 0.675, 0.38, 2, 0.04)
+                else:
+                    paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
+                # paveText.AddText(f"Norm = {norm:.5f}")
+                paveTexts.append(paveText)
+
+                if HIST_INDEX % 3 == 2:
+                    can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
+
+                print("Maybe covariance matrix:")
+                hists_mc_null = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(0.0)
+                err_matr = errors_1d_hists(hists_data[0][HIST_INDEX], hists_mc_null[0][HIST_INDEX])
+                print(err_matr)
+                print("Compare:")
+                errB0new = math.sqrt(err_matr[0, 0].item())
+                errB1new = math.sqrt(err_matr[1, 1].item())
+                ratio_new = ratio_err(lambda_theta, 1, errB1new, errB0new)
+                print(f"Old: {errB0}, new: {errB0new}")
+                print(f"Old: {errB1}, new: {errB1new}")
+                print(f"Old: {ratio_error}, new: {ratio_new}, new/old: {ratio_new / ratio_error}")
+
                 try:
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}")
-                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}", file=fout)
+                    print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error:.4f}",
+                          file=fout)
                 except:
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}")
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}", file=fout)
