@@ -2,8 +2,7 @@ import logging
 
 import torch
 
-import helicity_model_1d
-import helicity_model_3d
+from hist_utils import hist_to_tensor
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -81,11 +80,11 @@ def errors_3d(cos_theta, phi, data_y, model_y, sigmas, debug = False):
 
 
 def errors_1d_hists(hist_data, hist_mc):
-    t_data = helicity_model_1d.hist_to_tensor(hist_data)
-    t_mc = helicity_model_1d.hist_to_tensor(hist_mc)
+    t_data = hist_to_tensor(hist_data)
+    t_mc = hist_to_tensor(hist_mc)
     return errors_1d(t_data[0], t_data[1], t_mc[1], t_data[2])
 
 def errors_3d_hists(hist_data, hist_mc):
-    t_data = helicity_model_3d.hist_to_tensor(hist_data)
-    t_mc = helicity_model_3d.hist_to_tensor(hist_mc)
+    t_data = hist_to_tensor(hist_data)
+    t_mc = hist_to_tensor(hist_mc)
     return errors_3d(t_data[0], t_data[1], t_data[2], t_mc[2], t_data[3])

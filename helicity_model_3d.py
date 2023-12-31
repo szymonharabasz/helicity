@@ -1,8 +1,6 @@
 import torch
-from hist_utils import calc_one_chi2, HistMaker1d, geom_avg1d, ratio_err, symmetrize
-from eventsreader import Frame
-from bins import Bins
-from torch.autograd.functional import hessian
+
+from hist_utils import hist_to_tensor
 
 
 class Helicity3d(torch.nn.Module):
@@ -79,23 +77,6 @@ def chi2_loss_learn_norm(pred_y, y):
     return (((data - model) / data_err) ** 2).sum()
 
 
-def hist_to_tensor(hist):
-    nx = hist.GetNbinsX()
-    ny = hist.GetNbinsY()
-    columns = []
-    for bx in range(1, nx + 1):
-        for by in range(1, ny + 1):
-            t = torch.tensor([
-                hist.GetXaxis().GetBinCenter(bx),
-                hist.GetXaxis().GetBinCenter(by),
-                hist.GetBinContent(bx, by),
-                hist.GetBinError(bx, by)
-            ])
-            columns.append(t)
-    result = torch.stack(columns).transpose(0, 1)
-    return result
-
-
 def fit_simple(model, hist_data, hist_mc, n_epochs, lr, learn_norm):
     # hist_mc = hists_mc[0][hist_index]
     # hist_data = histsData_np[0][hist_index]
@@ -119,17 +100,6 @@ def fit_simple(model, hist_data, hist_mc, n_epochs, lr, learn_norm):
         optimizer.step()
 
         losses.append(loss.item())
-
-
-    def loss_for_hessian(lambda_theta, lambda_phi, lambda_theta_phi):
-        model.lambda_theta = torch.nn.Parameter(lambda_theta)
-        model.lambda_phi = torch.nn.Parameter(lambda_phi)
-        model.lambda_theta_phi = torch.nn.Parameter(lambda_theta_phi)
-        y_pred = model(train_x)
-        return chi2_loss(y_pred, train_y)
-
-    H = hessian(loss_for_hessian, (torch.tensor(model.lambda_theta.item()), torch.tensor(model.lambda_phi.item()), torch.tensor(model.lambda_theta_phi.item())))
-    print("Hessian ", H)
 
     return losses
 

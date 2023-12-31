@@ -1,11 +1,12 @@
 import math
 
-from ROOT import TCanvas, TFile, TMath, TString, TH1F
+from ROOT import TCanvas, TFile, TMath, TString, TH1F, TH2F
 
 from eventsreader import SpdmeEventsReader, PickleEventsReader
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
 import os.path
+import torch
 
 def calc_diff(hist_mc, hist_data, bx, by):
     content_mc = hist_mc.GetBinContent(bx + 1, by + 1) / hist_mc.Integral()
@@ -200,3 +201,42 @@ def symmetrize(hist):
         hist.SetBinError(j, eavg)
 
         i = i + 1
+
+
+def hist_to_tensor(hist):
+    def hist_to_tensor_1d(hist):
+        n = hist.GetNbinsX()
+        columns = []
+        for b in range(1, n + 1):
+            t = torch.tensor([
+                hist.GetBinCenter(b),
+                hist.GetBinContent(b),
+                hist.GetBinError(b)
+            ])
+            columns.append(t)
+        result = torch.stack(columns).transpose(0, 1)
+        return result
+
+    def hist_to_tensor_2d(hist):
+        nx = hist.GetNbinsX()
+        ny = hist.GetNbinsY()
+        columns = []
+        for bx in range(1, nx + 1):
+            for by in range(1, ny + 1):
+                t = torch.tensor([
+                    hist.GetXaxis().GetBinCenter(bx),
+                    hist.GetXaxis().GetBinCenter(by),
+                    hist.GetBinContent(bx, by),
+                    hist.GetBinError(bx, by)
+                ])
+                columns.append(t)
+        result = torch.stack(columns).transpose(0, 1)
+        return result
+
+    if isinstance(hist, TH1F):
+        return hist_to_tensor_1d(hist)
+    elif isinstance(hist, TH2F):
+        return hist_to_tensor_2d(hist)
+    else:
+        print("hist is none of these")
+        return None
