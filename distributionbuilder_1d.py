@@ -2,7 +2,7 @@ from math import cos
 
 from ROOT import TH1F
 
-from distributionbuilder_base import DistributionBuilderBase
+from distributionbuilder_base import DistributionBuilderBase, iter
 
 
 class DistributionBuilder_1d(DistributionBuilderBase):

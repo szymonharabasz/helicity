@@ -5,6 +5,7 @@ from ROOT import TCanvas, TFile, TMath, TString, TH1F, TH2F
 from eventsreader import SpdmeEventsReader, PickleEventsReader
 from surrogatedistributionbuilder import SurrogateDistributionBuilder
 from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
+from bins import Bins
 import os.path
 import torch
 
@@ -87,6 +88,27 @@ class HistMaker1d:
         self.builder.setParameters(lambda_theta)
         return self.builder.getHists()
 
+
+class CombinedHistMaker:
+    def __init__(self, hist_maker_1, hist_maker_2, fraction):
+        self.hist_maker_1 = hist_maker_1
+        self.hist_maker_2 = hist_maker_2
+        self.fraction = fraction
+
+    def make_hists(self, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
+        if isinstance(self.hist_maker_1, HistMaker) and isinstance(self.hist_maker_2, HistMaker):
+            hists_1 = self.hist_maker_1.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+            hists_2 = self.hist_maker_2.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+        else:
+            hists_1 = self.hist_maker_1.make_hists(lambda_theta)
+            hists_2 = self.hist_maker_2.make_hists(lambda_theta)
+        for h1, h2 in zip(hists_1, hists_2):
+            if not isinstance(h1, list):
+                h1.Add(h2, self.fraction * h1.Integral() / h2.Integral())
+            else:
+                for hh1, hh2 in zip(h1, h2):
+                    hh1.Add(hh2, self.fraction * hh1.Integral() / hh2.Integral())
+        return hists_1
 
 def make_root_plots(hists_mc, hists_data):
     c = TCanvas("c", "c", 100, 100, 1200, 1600)
@@ -240,3 +262,4 @@ def hist_to_tensor(hist):
     else:
         print("hist is none of these")
         return None
+
