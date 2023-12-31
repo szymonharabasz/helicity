@@ -39,14 +39,9 @@ class SurrogateDistributionBuilder_1d(DistributionBuilder_1d):
                 pass
             # hist.Scale(1./hist.Integral())
 
-        # hmassLowM = self.base_hists[1][0]
-        # hzLowM = self.base_hists[2][0]
-        # hmassLowM = self.base_hists[1][0]
-        # hzLowM = self.base_hists[2][0]
 
         iter = iter + 1
         return [hists, self.base_hists[1], self.base_hists[2], self.base_hists[3]]
 
     def getHists(self) -> list[TH1F]:
-        result = self.reweightBaseHists()
-        return result
+        return self.reweightBaseHists()
