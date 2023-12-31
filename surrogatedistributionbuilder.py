@@ -1,10 +1,9 @@
-from ctypes.wintypes import HINSTANCE
-from math import sin, cos
-from ROOT import TH1F, TH2F, TMath, TFile
-from datetime import datetime
-from distributionbuilder import DistributionBuilder, iter
+from ROOT import TH2F, TMath
+
+from distributionbuilder import DistributionBuilder
 
 iter = 1
+
 
 class SurrogateDistributionBuilder(DistributionBuilder):
     def __init__(self, histname_suffix, events, bins):
@@ -16,19 +15,19 @@ class SurrogateDistributionBuilder(DistributionBuilder):
         hists: list[TH2F] = []
         for bin in self.bins:
             histname = "hist%s%s_iter%i" % (bin.suffix(), self.histname_suffix, iter)
-            newhist = TH2F(histname,histname,20,-1,1,36,0,2*TMath.Pi())
+            newhist = TH2F(histname, histname, 20, -1, 1, 36, 0, 2 * TMath.Pi())
             hists.append(newhist)
         if not isinstance(newhist, TH2F):
             print("Error, newHist is: ", newhist)
-            
+
         for ihist in range(len(hists)):
 
             hist = hists[ihist]
             baseHist = self.base_hists[0][ihist]
             for ix in range(hist.GetNbinsX()):
                 for iy in range(hist.GetNbinsY()):
-                    bx = ix+1
-                    by = iy+1
+                    bx = ix + 1
+                    by = iy + 1
                     content = baseHist.GetBinContent(bx, by)
                     error = baseHist.GetBinError(bx, by)
                     phi = hist.GetYaxis().GetBinCenter(by)
@@ -36,16 +35,15 @@ class SurrogateDistributionBuilder(DistributionBuilder):
                     theta = TMath.ACos(cosTheta)
 
                     weight = self.calcWeight(theta, phi)
-                    hist.SetBinContent(bx, by, content*weight)
-                    hist.SetBinError(bx, by, error*weight)
-                    
-            
+                    hist.SetBinContent(bx, by, content * weight)
+                    hist.SetBinError(bx, by, error * weight)
+
             if hist.Integral() > 0:
-                hist.Scale(1./hist.Integral())
-        
+                hist.Scale(1. / hist.Integral())
+
         hmass = self.base_hists[1][0]
         hz = self.base_hists[2][0]
-            
+
         iter = iter + 1
         return [hists, [hmass], [hz]]
 
