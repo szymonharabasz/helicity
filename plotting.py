@@ -221,22 +221,6 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 ratio_error1 = ratio_err(lambda_theta, 1, errB1, errB0)
                 ratio_error2 = ratio_err(lambda_theta_phi, 1, errB2, errB0)
                 ratio_error3 = ratio_err(lambda_phi, 1, errB3, errB0)
-
-                can1.cd(HIST_INDEX % 3 + 1)
-
-                caption = f"#lambda_{{#theta}} = {lambda_theta:.2f} #pm {ratio_error1:.2f}"
-                if HIST_INDEX < 6:
-                    paveText = set_opt_text(caption, 0.25, 0.26, 0.675, 0.38, 2, 0.04)
-                else:
-                    paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
-                # paveText.AddText(f"Norm = {norm:.5f}")
-                paveText.AddText(f"#lambda_{{#phi}} = {lambda_phi:.2f} #pm {ratio_error3:.2f}")
-                paveText.AddText(f"#lambda_{{#theta#phi}} = {lambda_theta_phi:.2f} #pm {ratio_error2:.2f}")
-                paveTexts.append(paveText)
-
-                if HIST_INDEX % 3 == 2:
-                    can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
-
                 print("Maybe covariance matrix:")
                 hists_mc_null = fn_get_hist_maker_mc(sign, HIST_INDEX).make_hists(0.0)
                 err_matr = errors_3d_hists(hists_data[0][HIST_INDEX], hists_mc_null[0][HIST_INDEX])
@@ -252,12 +236,28 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 print(f"Old: {ratio_error1}, new: {ratio_new1}, new/old: {ratio_new1 / ratio_error1}")
                 print(f"Old: {ratio_error2}, new: {ratio_new2}, new/old: {ratio_new2 / ratio_error2}")
                 print(f"Old: {ratio_error3}, new: {ratio_new3}, new/old: {ratio_new3 / ratio_error3}")
+                can1.cd(HIST_INDEX % 3 + 1)
+
+                caption = f"#lambda_{{#theta}} = {lambda_theta:.2f} #pm {ratio_new1:.2f}"
+                if HIST_INDEX < 6:
+                    paveText = set_opt_text(caption, 0.25, 0.26, 0.675, 0.38, 2, 0.04)
+                else:
+                    paveText = set_opt_text(caption, 0.25, 0.76, 0.675, 0.88, 2, 0.04)
+                # paveText.AddText(f"Norm = {norm:.5f}")
+                paveText.AddText(f"#lambda_{{#phi}} = {lambda_phi:.2f} #pm {ratio_new3:.2f}")
+                paveText.AddText(f"#lambda_{{#theta#phi}} = {lambda_theta_phi:.2f} #pm {ratio_new2:.2f}")
+                paveTexts.append(paveText)
+
+                if HIST_INDEX % 3 == 2:
+                    can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
+
+
 
                 try:
                     print(
-                        f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error1:.4f}, lambda_phi = {lambda_phi:.4f} +- {ratio_error3:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f} +- {ratio_error2:.4f}")
+                        f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_new1:.4f}, lambda_phi = {lambda_phi:.4f} +- {ratio_new3:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f} +- {ratio_new2:.4f}")
                     print(
-                        f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_error1:.4f}, lambda_phi = {lambda_phi:.4f} +- {ratio_error3:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f} +- {ratio_error2:.4f}",
+                        f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f} +- {ratio_new1:.4f}, lambda_phi = {lambda_phi:.4f} +- {ratio_new3:.4f}, lambda_theta_phi = {lambda_theta_phi:.4f} +- {ratio_new2:.4f}",
                         file=fout)
                 except:
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}")
