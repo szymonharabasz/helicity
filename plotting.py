@@ -4,7 +4,7 @@ from error_matrix import errors_1d_hists, errors_3d_hists
 from hist_template import set_pad, set_th1
 from hist_utils import diff_hist
 import matplotlib.pyplot as plt
-from ROOT import TCanvas
+from ROOT import TCanvas, TLegend
 from hist_template import set_opt_text
 from hist_utils import ratio_err
 
@@ -192,12 +192,12 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
             hmodels.append(best_hists_mc[0][HIST_INDEX])
 
             if HIST_INDEX % 3 == 0:
-                can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 600)
+                can1 = TCanvas(f"can_cmp_{HIST_INDEX}_{sign}", "can", 900, 600)
                 if analyse_3d:
-                    can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 900)
+                    can1 = TCanvas(f"can_cmp_{HIST_INDEX}_{sign}", "can", 900, 900)
                     can1.Divide(3, 3)
                 else:
-                    can1 = TCanvas(f"can_cmp_{HIST_INDEX}", "can", 900, 600)
+                    can1 = TCanvas(f"can_cmp_{HIST_INDEX}_{sign}", "can", 900, 600)
                     can1.Divide(3, 2)
                 can1.Draw()
                 canvases.append(can1)
@@ -300,3 +300,99 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 except:
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}")
                     print(f"{HIST_INDEX}. Final result: lambda_theta = {lambda_theta:.4f}", file=fout)
+
+            can1.SaveAs(f"{dir_name}/{can1.GetName()}.gif")
+            
+def show_mass_z(hists_data, histMakerMC_pi0, histMakerMC_rho, histMakerMC_mix, event_mixing, fraction, dir_name, sign):
+    hmodelLowM_rho = histMakerMC_mix.make_hists(0.0) if event_mixing else histMakerMC_rho.make_hists(0.0)
+    hmodelLowM_rho[2][0].SetLineColor(8)
+    hmodelLowM_rho[1][0].SetLineColor(8)
+
+    hmodelLowM = histMakerMC_pi0.make_hists(0.0)
+
+    hmodelLowM[2][0].Scale(1.0 / hmodelLowM[2][0].Integral())
+    hmodelLowM[1][0].Scale(1.0 / hmodelLowM[1][0].Integral())
+    hmodelLowM_rho[2][0].Scale(1.0 / hmodelLowM_rho[2][0].Integral())
+    hmodelLowM_rho[1][0].Scale(1.0 / hmodelLowM_rho[1][0].Integral())
+
+    hmodelLowM[2][0].Add(hmodelLowM_rho[2][0], fraction)
+    hmodelLowM[1][0].Add(hmodelLowM_rho[1][0], fraction)
+
+    hmodelLowM[2][0].SetLineColor(2)
+    hmodelLowM[1][0].SetLineColor(2)
+    hmodelHigM = histMakerMC_rho.make_hists(0.0)
+    hmodelHigM[2][1].SetLineColor(2)
+    hmodelHigM[1][1].SetLineColor(2)
+
+    can = TCanvas(f"can_mass_z_{sign}", "can", 800, 800)
+    can.Divide(2, 2)
+    can.Draw()
+
+    pad = can.cd(1)
+    set_pad(pad)
+    dataScale = 1. / hists_data[2][0].Integral()
+    hists_data[2][0].Scale(dataScale)
+    hmodelLowM[2][0].Scale(1. / hmodelLowM[2][0].Integral())
+    hmodelLowM_rho[2][0].Scale(1. / hmodelLowM_rho[2][0].Integral())
+    hists_data[2][0].GetXaxis().SetTitle("cos(#theta^{CM}_{#gamma*})")
+    hists_data[2][0].SetTitle("Masses below #pi^{0}")
+
+    set_th1(hists_data[2][0], hists_data[2][0].GetXaxis().GetTitle(),
+            f"dN/d{hists_data[2][0].GetXaxis().GetTitle()} (a.u.)", 505, 20, 0.8, 1)
+    hists_data[2][0].Draw()
+    hmodelLowM[2][0].Draw("SAMEHIST")
+    hmodelLowM_rho[2][0].Draw("SAMEHIST")
+
+    pad = can.cd(2)
+    pad.SetLogy()
+    set_pad(pad)
+    hists_data[1][0].Scale(1. / hists_data[1][0].Integral())
+    hmodelLowM[1][0].Scale(1. / hmodelLowM[1][0].Integral())
+    hmodelLowM_rho[1][0].Scale(1. / hmodelLowM_rho[1][0].Integral())
+    hists_data[1][0].SetTitle("Masses below #pi^{0}")
+    hists_data[1][0].GetXaxis().SetTitle("#it{M}_{ee} (GeV/#it{c}^{2})")
+
+    set_th1(hists_data[1][0], hists_data[1][0].GetXaxis().GetTitle(),
+            f"dN/d{hists_data[1][0].GetXaxis().GetTitle()} (a.u.)", 505, 20, 0.8, 1)
+    hists_data[1][0].Draw("HIST")
+    hmodelLowM[1][0].Draw("SAMEHIST")
+    hmodelLowM_rho[1][0].Draw("SAMEHIST")
+
+    legend = TLegend(0.7, 0.7, 0.9, 0.9)
+    legend.AddEntry(hists_data[1][0], "exp", "pl")
+    legend.AddEntry(hmodelLowM[1][0], f"#pi^{{0}} + {fraction}#rho", "l")
+    legend.AddEntry(hmodelLowM_rho[1][0], "#rho", "l")
+    legend.Draw()
+
+    pad = can.cd(3)
+    set_pad(pad)
+    hists_data[2][1].Scale(1. / hists_data[2][1].Integral())
+    hmodelHigM[2][1].Scale(1. / hmodelHigM[2][1].Integral())
+    hmodelLowM_rho[2][1].Scale(1. / hmodelLowM_rho[2][1].Integral())
+    hists_data[2][1].GetXaxis().SetTitle("cos(#theta^{CM}_{#gamma*})")
+    hists_data[2][1].SetTitle("Masses above #pi^{0}")
+
+    set_th1(hists_data[2][1], hists_data[2][1].GetXaxis().GetTitle(),
+            f"dN/d{hists_data[2][1].GetXaxis().GetTitle()} (a.u.)", 505, 20, 0.8, 1)
+    hists_data[2][1].Draw()
+    hmodelHigM[2][1].Draw("SAMEHIST")
+    # hmodelLowM_rho[2][1].Draw("SAMEHIST")
+
+    pad = can.cd(4)
+    pad.SetLogy()
+    set_pad(pad)
+    hists_data[1][1].Scale(1. / hists_data[1][1].Integral())
+    hmodelHigM[1][1].Scale(1. / hmodelHigM[1][1].Integral())
+    hmodelLowM_rho[1][1].Scale(1. / hmodelLowM_rho[1][1].Integral())
+    hists_data[1][1].GetXaxis().SetTitle("#it{M}_{ee} (GeV/#it{c}^{2})")
+    hists_data[1][1].SetTitle("Masses above #pi^{0}")
+
+    set_th1(hists_data[1][1], hists_data[1][1].GetXaxis().GetTitle(),
+            f"dN/d{hists_data[1][1].GetXaxis().GetTitle()} (a.u.)", 505, 20, 0.8, 1)
+    hists_data[1][1].Draw()
+    hmodelHigM[1][1].Draw("SAMEHIST")
+    # hmodelLowM_rho[1][1].Draw("SAMEHIST")
+
+    can.SaveAs(f"{dir_name}/{can.GetName()}.gif")
+    
+    return can
