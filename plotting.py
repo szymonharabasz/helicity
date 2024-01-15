@@ -256,7 +256,7 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
 
                 final_results.append(
                     [f"mass_{HIST_INDEX // 3}_z_{HIST_INDEX % 3}", lambda_theta, ratio_new1, lambda_phi, ratio_new3,
-                     lambda_theta_phi, ratio_new2])
+                     lambda_theta_phi, ratio_new2, hists_data[0][HIST_INDEX].GetEntries()])
 
             else:
                 n, mean_x2, var_x2, sigma2 = x_axis_properties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
@@ -289,19 +289,21 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 print(f"Old: {err_b1}, new: {err_b1new}")
                 print(f"Old: {ratio_error}, new: {ratio_new}, new/old: {ratio_new / ratio_error}")
 
-                final_results.append([f"mass_{HIST_INDEX // 3}_z_{HIST_INDEX % 3}", lambda_theta, ratio_new])
+                final_results.append([f"mass_{HIST_INDEX // 3}_z_{HIST_INDEX % 3}", lambda_theta, ratio_new, hists_data[0][HIST_INDEX].GetEntries()])
 
             can1.SaveAs(f"{dir_name}/{can1.GetName()}.gif")
 
         if analyse_3d:
             df = pd.DataFrame(final_results,
                               columns=['bin', 'lambda_theta', 'err_lambda_theta', 'lambda_phi', 'err_lambda_phi',
-                                       'lambda_theta_phi', 'err_lambda_theta_phi'])
+                                       'lambda_theta_phi', 'err_lambda_theta_phi','yield'])
         else:
             df = pd.DataFrame(final_results,
-                              columns=['bin', 'lambda_theta', 'err_lambda_theta'])
+                              columns=['bin', 'lambda_theta', 'err_lambda_theta','yield'])
         print(df)
         df.to_csv(fout,float_format="%4.2g")
+        df.to_excel(f"{dir_name}/results_{sign}.xlsx",float_format="%4.2g")
+    return df
 
 
 def show_mass_z(hists_data, hist_maker_mc_pi0, hist_maker_mc_rho, hist_maker_mc_mix, event_mixing, fraction, dir_name, sign):
