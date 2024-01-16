@@ -41,7 +41,7 @@ class SurrogateDistributionBuilder_1d(DistributionBuilder_1d):
 
 
         iter = iter + 1
-        return [hists, self.base_hists[1], self.base_hists[2], self.base_hists[3]]
+        return [hists, self.base_hists[1], self.base_hists[2], self.base_hists[3], self.base_hists[4]]
 
     def getHists(self) -> list[TH1F]:
         return self.reweightBaseHists()

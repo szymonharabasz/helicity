@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from datetime import datetime
 
-from ROOT import TH1F
+from ROOT import TH1F, TH2F
 
 iter = 0
 
@@ -43,6 +43,7 @@ class DistributionBuilderBase(ABC):
         hmassHigM = TH1F("hmassHigM" + self.histname_suffix, "hmassHigM" + self.histname_suffix, 100, 0, 1000)
         hzHigM = TH1F("hzHigM" + self.histname_suffix, "hzHigM" + self.histname_suffix, 100, -1, 1)
         hyHigM = TH1F("hyHigM" + self.histname_suffix, "hyHigM" + self.histname_suffix, 100, -2, 2)
+        counter = TH2F("counter" + self.histname_suffix, "counter" + self.histname_suffix, 4, -0.5, 3.5, 3, -0.5, 2.5)
         ievent = 0
         nevents = len(self.events)
 
@@ -66,6 +67,7 @@ class DistributionBuilderBase(ABC):
                     hmassHigM.Fill(event.mass)
                     hzHigM.Fill(event.z)
                     hyHigM.Fill(event.y)
+                counter.Fill(binIndex // 3, binIndex % 3)
 
         now = datetime.now()
         current_time = now.strftime("%m/%d/%Y, %H:%M:%S")
@@ -76,7 +78,7 @@ class DistributionBuilderBase(ABC):
             # hist.Scale(1./hist.Integral())
 
         iter = iter + 1
-        result = [self.angular_hists, [hmassLowM, hmassHigM], [hzLowM, hzHigM], [hyLowM, hyHigM]]
+        result = [self.angular_hists, [hmassLowM, hmassHigM], [hzLowM, hzHigM], [hyLowM, hyHigM], counter]
         print(f"#1 result length {len(result)}")
         return result
 

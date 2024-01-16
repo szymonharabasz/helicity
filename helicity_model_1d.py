@@ -56,7 +56,7 @@ def chi2_loss(pred_y, y):
     # print("y[1] ", y[1])
     # print("y[1][indices] ", y[1][indices])
     # return (((y[1][indices] - pred_y[1][indices])/y[2][indices]) ** 2).sum()
-    return (((data - model) / data_err) ** 2).sum()
+    return (((data - model) / data_err) ** 2).sum() / (data.numel() - 1)
 
 
 def chi2_loss_learn_norm(pred_y, y):
@@ -67,7 +67,7 @@ def chi2_loss_learn_norm(pred_y, y):
     data = y[1][indices]
     data_err = y[2][indices]
     model = pred_y[1][indices]
-    return (((data - model) / data_err) ** 2).sum()
+    return (((data - model) / data_err) ** 2).sum() / (data.numel() - 2)
 
 
 def fit_simple(model, hist_data, hist_mc, n_epochs, lr, learn_norm):

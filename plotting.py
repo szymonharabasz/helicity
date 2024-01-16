@@ -165,7 +165,7 @@ def plot_losses(losses_all, range_used):
         # print(losses_all[HIST_INDEX])
         ax[HIST_INDEX // 3][HIST_INDEX % 3].plot(losses_all[HIST_INDEX])
         ax[HIST_INDEX // 3][HIST_INDEX % 3].set_xlabel("Epoch")
-        ax[HIST_INDEX // 3][HIST_INDEX % 3].set_ylabel("Loss ($\chi^2$)")
+        ax[HIST_INDEX // 3][HIST_INDEX % 3].set_ylabel("Loss ($\chi^2$) / ndf")
         ax[HIST_INDEX // 3][HIST_INDEX % 3].set_xscale("log")
         ax[HIST_INDEX // 3][HIST_INDEX % 3].set_yscale("log")
     return fig, ax
@@ -214,6 +214,8 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
 
             hdiffs.append(hdiff1)
 
+            counts = hists_data[4].GetBinContent(HIST_INDEX // 3 + 1, HIST_INDEX % 3 + 1)
+
             if analyse_3d:
                 n, mean1, var1, mean2, var2, mean3, var3, sigma2 = dist_properties(best_hists_mc[0][HIST_INDEX],
                                                                                    hists_data[0][HIST_INDEX])
@@ -254,9 +256,10 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 if HIST_INDEX % 3 == 2:
                     can1.SaveAs(f"{dir_name}/comparison_{HIST_INDEX}.gif")
 
+
                 final_results.append(
                     [f"mass_{HIST_INDEX // 3}_z_{HIST_INDEX % 3}", lambda_theta, ratio_new1, lambda_phi, ratio_new3,
-                     lambda_theta_phi, ratio_new2, hists_data[0][HIST_INDEX].GetEntries()])
+                     lambda_theta_phi, ratio_new2, counts])
 
             else:
                 n, mean_x2, var_x2, sigma2 = x_axis_properties(best_hists_mc[0][HIST_INDEX], hists_data[0][HIST_INDEX])
@@ -289,7 +292,7 @@ def show_results(sign, dir_name, range_used, parameters_all, fn_get_hist_maker_m
                 print(f"Old: {err_b1}, new: {err_b1new}")
                 print(f"Old: {ratio_error}, new: {ratio_new}, new/old: {ratio_new / ratio_error}")
 
-                final_results.append([f"mass_{HIST_INDEX // 3}_z_{HIST_INDEX % 3}", lambda_theta, ratio_new, hists_data[0][HIST_INDEX].GetEntries()])
+                final_results.append([f"mass_{HIST_INDEX // 3}_z_{HIST_INDEX % 3}", lambda_theta, ratio_new, counts])
 
             can1.SaveAs(f"{dir_name}/{can1.GetName()}.gif")
 

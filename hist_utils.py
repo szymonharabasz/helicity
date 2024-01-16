@@ -110,6 +110,31 @@ class CombinedHistMaker:
                     hh1.Add(hh2, self.fraction * hh1.Integral() / hh2.Integral())
         return hists_1
 
+class SignalHistMaker:
+    def __init__(self, hist_maker_np, hist_maker_pp, hist_maker_nn):
+        self.hist_maker_np = hist_maker_np
+        self.hist_maker_pp = hist_maker_pp
+        self.hist_maker_nn = hist_maker_nn
+
+    def make_hists(self, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
+        if isinstance(self.hist_maker_np, HistMaker) and isinstance(self.hist_maker_pp, HistMaker) and isinstance(self.hist_maker_pp, HistMaker):
+            hists_np = self.hist_maker_np.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+            hists_pp = self.hist_maker_pp.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+            hists_nn = self.hist_maker_nn.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+        else:
+            hists_np = self.hist_maker_np.make_hists(lambda_theta)
+            hists_pp = self.hist_maker_pp.make_hists(lambda_theta)
+            hists_nn = self.hist_maker_nn.make_hists(lambda_theta)
+        for hnp, hpp, hnn in zip(hists_np, hists_pp, hists_nn):
+            if not isinstance(hnp, list):
+                havg = geom_avg(hpp, hnn)
+                hnp.Add(havg, -1)
+            else:
+                for hhnp, hhpp, hhnn in zip(hnp, hpp, hnn):
+                    havg = geom_avg(hhpp, hhnn)
+                    hhnp.Add(havg, -1)
+        return hists_np
+
 def make_root_plots(hists_mc, hists_data):
     c = TCanvas("c", "c", 100, 100, 1200, 1600)
     c.Divide(3, 4)

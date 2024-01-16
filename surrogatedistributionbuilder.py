@@ -41,9 +41,8 @@ class SurrogateDistributionBuilder(DistributionBuilder):
             if hist.Integral() > 0:
                 hist.Scale(1. / hist.Integral())
 
-
         iter = iter + 1
-        return [hists, self.base_hists[1], self.base_hists[2], self.base_hists[3]]
+        return [hists, self.base_hists[1], self.base_hists[2], self.base_hists[3], self.base_hists[4]]
 
     def getHists(self) -> list[TH2F]:
         return self.reweightBaseHists()
