@@ -111,28 +111,49 @@ class CombinedHistMaker:
         return hists_1
 
 class SignalHistMaker:
-    def __init__(self, hist_maker_np, hist_maker_pp, hist_maker_nn):
+    def __init__(self, hist_maker_np, hist_maker_pp, hist_maker_nn, hist_maker_np_mix, hist_maker_pp_mix, hist_maker_nn_mix):
         self.hist_maker_np = hist_maker_np
         self.hist_maker_pp = hist_maker_pp
         self.hist_maker_nn = hist_maker_nn
+        self.hist_maker_np_mix = hist_maker_np_mix
+        self.hist_maker_pp_mix = hist_maker_pp_mix
+        self.hist_maker_nn_mix = hist_maker_nn_mix
 
     def make_hists(self, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
+
+        def subtr_bgr(hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix):
+            fnc_avg = geom_avg1d if isinstance(hpp, TH1F) else geom_avg2d
+
+            havg = fnc_avg(hpp, hnn, 0.2)
+            havg_mix = fnc_avg(hpp_mix, hnn_mix, 0.2)
+            hnp_mix.Divide(havg_mix)
+            havg.Multiply(hnp_mix)
+
+           # hnp.Add(havg, -1.0)
+            for bin in range(1, hnp.GetNbinsX() + 1):
+                hnp.SetBinContent(bin,havg.GetBinContent(bin))
+                hnp.SetBinError(bin,havg.GetBinError(bin))
+
         if isinstance(self.hist_maker_np, HistMaker) and isinstance(self.hist_maker_pp, HistMaker) and isinstance(self.hist_maker_pp, HistMaker):
             hists_np = self.hist_maker_np.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
             hists_pp = self.hist_maker_pp.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
             hists_nn = self.hist_maker_nn.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+            hists_np_mix = self.hist_maker_np_mix.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+            hists_pp_mix = self.hist_maker_pp_mix.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
+            hists_nn_mix = self.hist_maker_nn_mix.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
         else:
             hists_np = self.hist_maker_np.make_hists(lambda_theta)
             hists_pp = self.hist_maker_pp.make_hists(lambda_theta)
             hists_nn = self.hist_maker_nn.make_hists(lambda_theta)
-        for hnp, hpp, hnn in zip(hists_np, hists_pp, hists_nn):
+            hists_np_mix = self.hist_maker_np_mix.make_hists(lambda_theta)
+            hists_pp_mix = self.hist_maker_pp_mix.make_hists(lambda_theta)
+            hists_nn_mix = self.hist_maker_nn_mix.make_hists(lambda_theta)
+        for hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix in zip(hists_np, hists_pp, hists_nn, hists_np_mix, hists_pp_mix, hists_nn_mix):
             if not isinstance(hnp, list):
-                havg = geom_avg(hpp, hnn)
-                hnp.Add(havg, -1)
+                subtr_bgr(hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix)
             else:
-                for hhnp, hhpp, hhnn in zip(hnp, hpp, hnn):
-                    havg = geom_avg(hhpp, hhnn)
-                    hhnp.Add(havg, -1)
+                for hhnp, hhpp, hhnn, hhnp_mix, hhpp_mix, hhnn_mix in zip(hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix):
+                    subtr_bgr(hhnp, hhpp, hhnn, hhnp_mix, hhpp_mix, hhnn_mix)
         return hists_np
 
 def make_root_plots(hists_mc, hists_data):
@@ -159,34 +180,37 @@ def make_root_plots(hists_mc, hists_data):
     c.SaveAs("c.gif")
     print("Total hist entries: ", totentries)
 
-def geom_avg(h1, h2, minratio):
+def geom_avg2d(h1, h2, minratio):
     name = TString(h1.GetName())
     name.ReplaceAll("NN", "Avg")
     name.ReplaceAll("PP", "Avg")
     nbins = h1.GetNbinsX()
-    low_edge = h1.GetXaxis().GetBinLowEdge(1)
-    up_edge = h1.GetXaxis().GetBinUpEdge(nbins)
-    result = TH1F(name.Data(), name.Data(), h1.GetNbinsX(), low_edge, up_edge)
+    low_edge_x = h1.GetXaxis().GetBinLowEdge(1)
+    up_edge_x = h1.GetXaxis().GetBinUpEdge(nbins)
+    low_edge_y = h1.GetYaxis().GetBinLowEdge(1)
+    up_edge_y = h1.GetYaxis().GetBinUpEdge(nbins)
+    result = TH2F(name.Data(), name.Data(), h1.GetNbinsX(), low_edge_x, up_edge_x, h1.GetNbinsY(), low_edge_y, up_edge_y)
     for bin_x in range(1, h1.GetNbinsX()):
         for bin_y in range(1, h1.GetNbinsY()):
-            for bin_z in range(1, h1.GetNbinsZ()):
-                ratio1 = h1.GetBinContent(bin_x, bin_y, bin_z) / h2.GetBinContent(bin_x, bin_y, bin_z)
-                ratio2 = h2.GetBinContent(bin_x, bin_y, bin_z) / h1.GetBinContent(bin_x, bin_y, bin_z)
-                content = 2 * TMath.Sqrt(
-                    h1.GetBinContent(bin_x, bin_y, bin_z) * h2.GetBinContent(bin_x, bin_y, bin_z))
-                x = h1.GetBinContent(bin_x, bin_y, bin_z)
-                y = h2.GetBinContent(bin_x, bin_y, bin_z)
-                sx = h1.GetBinError(bin_x, bin_y, bin_z)
-                sy = h2.GetBinError(bin_x, bin_y, bin_z)
+            content1 = h1.GetBinContent(bin_x, bin_y)
+            content2 = h2.GetBinContent(bin_x, bin_y)
+            if content1 != 0 and content2 != 0:
+                ratio1 = content1 / content2
+                ratio2 = content2 / content1
+                content = 2 * TMath.Sqrt( content1 * content2 )
+                x = content1
+                y = content2
+                sx = h1.GetBinError(bin_x, bin_y)
+                sy = h2.GetBinError(bin_x, bin_y)
                 dfdx2 = y / x
                 dfdy2 = x / y
                 error = TMath.Sqrt(dfdx2 * sx * sx + dfdy2 * sy * sy)
                 if ratio1 <= minratio or ratio2 <= minratio or not TMath.Finite(ratio1) or not TMath.Finite(ratio2):
-                    content = h1.GetBinContent(bin_x, bin_y, bin_z) + h2.GetBinContent(bin_x, bin_y, bin_z)
-                    error = h1.GetBinError(bin_x, bin_y, bin_z) + h2.GetBinError(bin_x, bin_y, bin_z)
+                    content = h1.GetBinContent(bin_x, bin_y) + h2.GetBinContent(bin_x, bin_y)
+                    error = h1.GetBinError(bin_x, bin_y) + h2.GetBinError(bin_x, bin_y)
 
-                result.SetBinContent(bin_x, bin_y, bin_z, content)
-                result.SetBinError(bin_x, bin_y, bin_z, error)
+                result.SetBinContent(bin_x, bin_y, content)
+                result.SetBinError(bin_x, bin_y, error)
     return result
 
 def geom_avg1d(h1, h2, minratio):
