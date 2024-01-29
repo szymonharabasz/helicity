@@ -37,6 +37,9 @@ def set_th1(hist, x_axis_title, y_axis_title, ndevision, marker_style, marker_si
     hist.SetLineWidth(2)
 
 
+def set_th2(hist, x_axis_title, y_axis_title, ndevision, marker_style, marker_size, color):
+    set_th1(hist, x_axis_title, y_axis_title, ndevision, marker_style, marker_size, color)
+
 def set_pad(canvas):
     gStyle.SetLineStyleString(22, "80 18 12 18 12 12")
     canvas.SetFillColor(0)

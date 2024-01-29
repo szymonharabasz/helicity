@@ -8,7 +8,8 @@ import pandas as pd
 from ROOT import TCanvas, TLegend
 
 axis_title = r"$cos(\theta_e^{\gamma*})$"
-
+xtitle_root = "cos(#theta_{e}^{#gamma*})"
+ytitle_root = "#phi_{e}^{#gamma*}"
 
 def oneplot(xs, ax, tensor, title):
     # pos = ax.plot(xs, tensor, ymin=0, ymax=tensor.max())
@@ -35,7 +36,7 @@ def plot_comparison(can, pad_nr1, pad_nr2, hist_mc, hist_data, hist_index, pull_
     pad.SetRightMargin(0.16)
     hdiff = diff_hist(hist_mc, hist_data)
     hdiff.SetTitle(pull_title)
-    set_th1(hdiff, hdiff.GetXaxis().GetTitle(), "Pull value", 505, 20, 0.8, 2)
+    set_th1(hdiff, xtitle_root, "Pull value", 505, 20, 0.8, 2)
     hdiff.Draw("HIST")
     can.Update()
     can.Modified()
@@ -50,7 +51,7 @@ def plot_one_comparison(can, pad_nr, hist_mc, hist_data, title, xtitle):
     pad.SetRightMargin(0.16)
     hist_data.GetXaxis().SetTitle(xtitle)
     hist_data.SetTitle(title)
-    set_th1(hist_data, hist_data.GetXaxis().GetTitle(), f"dN/d{hist_data.GetXaxis().GetTitle()} (a.u.)",
+    set_th1(hist_data, xtitle, f"dN/d{xtitle} (a.u.)",
             505, 20, 0.8, 1)
     hist_data.Draw()
     hist_mc.Scale(hist_data.Integral() / hist_mc.Integral())
@@ -70,14 +71,14 @@ def plot_comparison_2d(can, pad_nr1, pad_nr2, pad_nr3, hist_mc, hist_data, hist_
     plot_one_comparison(can, pad_nr1, hist_mc_px, hist_data_px, title, "cos(#theta_{e}^{#gamma*})")
     hist_data_py = hist_data.ProjectionY()
     hist_mc_py = hist_mc.ProjectionY()
-    plot_one_comparison(can, pad_nr2, hist_mc_py, hist_data_py, title, "#phi_{e}^{#gamma*}")
+    plot_one_comparison(can, pad_nr2, hist_mc_py, hist_data_py, title, ytitle_root)
 
     pad = can.cd(pad_nr3)
     set_pad(pad)
     pad.SetRightMargin(0.16)
     hdiff = diff_hist(hist_mc, hist_data)
     hdiff.SetTitle(pull_title)
-    set_th1(hdiff, hdiff.GetXaxis().GetTitle(), hdiff.GetYaxis().GetTitle(), 505, 20, 0.8, 2)
+    set_th1(hdiff, xtitle_root, ytitle_root, 505, 20, 0.8, 2)
     hdiff.Draw("COLZ")
     can.Update()
     can.Modified()
