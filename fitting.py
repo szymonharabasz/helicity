@@ -1,12 +1,8 @@
-import math
-from eventsreader import SpdmeEventsReader
-from distributionbuilder import DistributionBuilder
-from surrogatedistributionbuilder import SurrogateDistributionBuilder
-from distributionbuilder_1d import DistributionBuilder_1d
-from surrogatedistributionbuilder_1d import SurrogateDistributionBuilder_1d
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy.optimize as opt
+import helicity_model_1d
+import helicity_model_3d
 
 
 def covariance_fit_scipy(predictive_mean, predictive_lower, predictive_upper, best, hist_index, ax, bins, bounds,
@@ -91,3 +87,20 @@ def covariance_fit_scipy(predictive_mean, predictive_lower, predictive_upper, be
         return params0[1], params0[2]
     except:
         return None
+
+
+def fit_simple_model(histsData, get_hist_maker_mc, range_used, learn_norm, analyse_3d):
+    parameters_all= []
+    losses_all = [[]] * len(range_used)
+    fit_simple = helicity_model_3d.fit_simple if analyse_3d else helicity_model_1d.fit_simple
+
+    for HIST_INDEX in range_used:
+        simple_model = helicity_model_3d.Helicity3d(learn_norm) if analyse_3d else helicity_model_1d.Helicity1d(
+            learn_norm)
+        hist_data_simple = histsData[0][HIST_INDEX]
+        hist_mc_simple = get_hist_maker_mc("pp", HIST_INDEX).make_hists(0.0)[0][HIST_INDEX]
+        losses = fit_simple(simple_model, hist_data_simple, hist_mc_simple, 10000, 0.01, learn_norm)
+        parameters_all.append([param for param in simple_model.parameters()])
+        losses_all[HIST_INDEX] = losses
+
+        return parameters_all, losses_all

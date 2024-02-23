@@ -110,6 +110,7 @@ class CombinedHistMaker:
                     hh1.Add(hh2, self.fraction * hh1.Integral() / hh2.Integral())
         return hists_1
 
+
 class SignalHistMaker:
     def __init__(self, hist_maker_np, hist_maker_pp, hist_maker_nn, hist_maker_np_mix, hist_maker_pp_mix, hist_maker_nn_mix):
         self.hist_maker_np = hist_maker_np
@@ -121,18 +122,23 @@ class SignalHistMaker:
 
     def make_hists(self, lambda_theta=0, lambda_phi=0, lambda_theta_phi=0):
 
+        hists_avg = []
+        hists_k = []
+
         def subtr_bgr(hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix):
             fnc_avg = geom_avg1d if isinstance(hpp, TH1F) else geom_avg2d
 
             havg = fnc_avg(hpp, hnn, 0.2)
             havg_mix = fnc_avg(hpp_mix, hnn_mix, 0.2)
             hnp_mix.Divide(havg_mix)
+            hnp_mix.Scale(2.0)
             havg.Multiply(hnp_mix)
 
-           # hnp.Add(havg, -1.0)
-            for bin in range(1, hnp.GetNbinsX() + 1):
-                hnp.SetBinContent(bin,havg.GetBinContent(bin))
-                hnp.SetBinError(bin,havg.GetBinError(bin))
+            hnp.Add(havg, -1.0)
+            return havg, hnp_mix
+           # for bin in range(1, hnp.GetNbinsX() + 1):
+           #     hnp.SetBinContent(bin,havg.GetBinContent(bin))
+           #     hnp.SetBinError(bin,havg.GetBinError(bin))
 
         if isinstance(self.hist_maker_np, HistMaker) and isinstance(self.hist_maker_pp, HistMaker) and isinstance(self.hist_maker_pp, HistMaker):
             hists_np = self.hist_maker_np.make_hists(lambda_theta, lambda_phi, lambda_theta_phi)
@@ -150,11 +156,17 @@ class SignalHistMaker:
             hists_nn_mix = self.hist_maker_nn_mix.make_hists(lambda_theta)
         for hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix in zip(hists_np, hists_pp, hists_nn, hists_np_mix, hists_pp_mix, hists_nn_mix):
             if not isinstance(hnp, list):
-                subtr_bgr(hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix)
+                hist_avg, hist_k = subtr_bgr(hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix)
+                hists_avg.append(hist_avg)
+                hists_k.append(hist_k)
             else:
+                hists_avg.append([])
+                hists_k.append([])
                 for hhnp, hhpp, hhnn, hhnp_mix, hhpp_mix, hhnn_mix in zip(hnp, hpp, hnn, hnp_mix, hpp_mix, hnn_mix):
-                    subtr_bgr(hhnp, hhpp, hhnn, hhnp_mix, hhpp_mix, hhnn_mix)
-        return hists_np
+                    hist_avg, hist_k = subtr_bgr(hhnp, hhpp, hhnn, hhnp_mix, hhpp_mix, hhnn_mix)
+                    hists_avg[-1].append(hist_avg)
+                    hists_k[-1].append(hist_k)
+        return hists_np, hists_avg, hists_k
 
 def make_root_plots(hists_mc, hists_data):
     c = TCanvas("c", "c", 100, 100, 1200, 1600)
